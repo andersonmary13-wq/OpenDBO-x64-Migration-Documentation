@@ -1,0 +1,242 @@
+{
+  "schema": "public-documentation-set/v1",
+  "prepared_utc": "2026-10-19T20:55:31.423677+00:00",
+  "author": "NoobMaster70",
+  "narrative": "I provide complete English documentary copies for study alongside issue #138. I preserve historical states and keep my original issue body unchanged. I do not bundle game code, private runtime data, licensed SDK implementation or my private GM reference.",
+  "original_issue_url": "https://github.com/OpenDBO/OpenDBO-Core/issues/138",
+  "original_issue_body_sha256": "c6e248dabef4b127d8253bbcb7387c36eb43ef38cafbd264620d82e085ec2ff1",
+  "publication_destination": "I will publish this set separately in a new public documentation-only GitHub repository and link it through one new issue comment.",
+  "files": [
+    {
+      "file": "00-README_EN.md",
+      "bytes": 7148,
+      "sha256": "bf74537b36589646c8d7b1868c86a53c01959a666bfd5c2af035e0ff833fd876",
+      "source_snapshot": "I prepared this document index for this standalone set.",
+      "source_sha256": null,
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "01-MIGRATION_REPORT_EN.md",
+      "bytes": 26082,
+      "sha256": "b1af1c49f420d27b71362306dd44636eac09249a4c23a2d90e14eb0e44fb1da3",
+      "source_snapshot": "documentacao/COMMUNITY_X64_MIGRATION_REPORT_EN.md",
+      "source_sha256": "b1af1c49f420d27b71362306dd44636eac09249a4c23a2d90e14eb0e44fb1da3",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "02-TECHNICAL_APPENDIX_EN.md",
+      "bytes": 33023,
+      "sha256": "4bf9f1f1dcac53a418ff5188418ebe9c30a625b84044905a0e907e1d7e8f6ba6",
+      "source_snapshot": "documentacao/COMMUNITY_X64_TECHNICAL_APPENDIX_EN.md",
+      "source_sha256": "4bf9f1f1dcac53a418ff5188418ebe9c30a625b84044905a0e907e1d7e8f6ba6",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "03-MIGRATION_PROCESS_AND_TESTS_EN.md",
+      "bytes": 30078,
+      "sha256": "fbf98fec42f12805577c7a34127999ab64920888e5f04bebef2355bf28b5fd4e",
+      "source_snapshot": "documentacao/MIGRACAO64_PROCESSO_E_TESTES.md",
+      "source_sha256": "c8c3d75c1bab7445f8949382690b9c20f03cca3a315fd2ee3745999ae2c12506",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "04-DETAILED_TECHNICAL_RECORDS_EN.md",
+      "bytes": 31304,
+      "sha256": "d94ea77063a77def5d310158f11b67d4e1144acce433eaf1a6f8ea2516307e95",
+      "source_snapshot": "documentacao/MIGRACAO64_REGISTROS_TECNICOS.md",
+      "source_sha256": "80e134f54fc2582927df9dbcfb60e6684712d916e44a3af8517f0a5492ca3839",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "05-LOCAL_AND_GIT_ORGANIZATION_EN.md",
+      "bytes": 4852,
+      "sha256": "4e16291a2c481710c0742d83c78fc67086760919b83c7b4ecde1de9f2d6f4b47",
+      "source_snapshot": "documentacao/ORGANIZACAO_LOCAL_E_GIT.md",
+      "source_sha256": "caffeefb36912b830934516847a3b0ff68d6f39abf1b18ebdd5eba6479d8226e",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "06-VIDEO_ADAPTER_DESIGN_EN.md",
+      "bytes": 15086,
+      "sha256": "9a4c9a751b08d3cab03447eaa5d924332ef94b5dac4acc0b3ca6365806c5a478",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/DESIGN.md",
+      "source_sha256": "2eff1f6f7981c7f41c95c678780619c6a99c0ab782b04c82ae8ae5cc4f9e3831",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "07-VIDEO_ADAPTER_IMPLEMENTATION_EN.md",
+      "bytes": 8949,
+      "sha256": "fa1ea6b4873683ffa62808c5958e9dda68d8ac6d94a3e4a55e1a55cbe4f3bb10",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/IMPLEMENTATION.md",
+      "source_sha256": "65db0a1e0d978727dd1c75b384d9491be7fb58612fb0c3c213ca6c8be00ce480",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "08-PHYSICAL_X64_BOOTSTRAP_ARCHITECTURE_EN.md",
+      "bytes": 6732,
+      "sha256": "481382b9857ff7c9b06dbb321a53a85c50820a0cb3a80493484ed0adae09c5c8",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/migracao64-bootstrap/ARCHITECTURE.md",
+      "source_sha256": "3ac5df813c185177e061c1143ebb1fc5b595def6c91d1c9b4c26f1f9d6ca9fcc",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "09-CANDIDATE_STAGING_INSTRUCTIONS_EN.md",
+      "bytes": 2224,
+      "sha256": "122f1ec1a6156786808546ad358a2384392749d26b4bf2f273e024b89c8df49d",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/migracao64-bootstrap/STAGING_INSTRUCTIONS.md",
+      "source_sha256": "a40ca55f11b6bd4ac1eaddc2ed7c339cd83a2472477cebad55c37f27817b3bb3",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "10-VIDEO_ADAPTER_HISTORY_EN.md",
+      "bytes": 3814,
+      "sha256": "dff0105c86dd585e5c15287f18eed4f214515d177c88509e8d7ae44f8119427b",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/HISTORY.md",
+      "source_sha256": "53f4be7cae01e20b2688a349dfaf2c6f8919f3ecaf95193d3bacefc0598e0e6b",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "11-SOUND_ADAPTER_HISTORY_EN.md",
+      "bytes": 3879,
+      "sha256": "4fc1dd038ed52f3a199d0f2fe329f0c18f39ed9cc7c5fa7650d3d0c63d96c8b2",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/sound/HISTORY.md",
+      "source_sha256": "c3db6b7e150c63913d62c49dde2aa4a30c32c92fae048634a6332212dff421d7",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "12-SOUND_ADAPTER_V2_HISTORY_EN.md",
+      "bytes": 3087,
+      "sha256": "fcc562fae831618e0fd626c63ba776e360ef0459b62f052a858e82b916effab6",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/sound/v2/HISTORY.md",
+      "source_sha256": "1ca921dcdd20dfb2c69a9e5b299a9d7404ddeaf38cb00c3a8af9cfdefe26e27b",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "13-MANAGED_TEXTURE_V3_HISTORY_EN.md",
+      "bytes": 1110,
+      "sha256": "16f12137f8a68a89caa23010781083abfbbc504192c49d2687d0d244e396a5b9",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/pool-v3/HISTORY.md",
+      "source_sha256": "79aeaad2100e64d9a94b2c45b5eb968f62ea92a02b617cb2374434e92d2fce51",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "14-CONSUMER_TEST_HISTORY_EN.md",
+      "bytes": 2813,
+      "sha256": "cfd678f41527a0068f0ac898b77c944c0001a418fd507d0115e068ab4c956a52",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/bandi-sdk21-adapter/core-integration/tests/HISTORY_CONSUMERS_V1.md",
+      "source_sha256": "ebca5fcac09da5cbee7933ac87933ab8e6e223784a8d27b191ba20362ded4199",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "15-MANUAL_GAME_TEST_PLAN_EN.md",
+      "bytes": 6600,
+      "sha256": "ddf7fe5d8d24c02585a05f143ead0d34b06d55c6b16a147bca235bb508ab1208",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/fase28-documentacao/revisao-assets-audit-v6-20261019/roteiro-testes-jogo-x64-v2-primeira-pessoa.md",
+      "source_sha256": "345f5884eda4f62860491094828e7942fddd5258b28bbea48a0032bd47fc7a20",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "16-BUILD_WARNING_ANALYSIS_EN.md",
+      "bytes": 1458,
+      "sha256": "61195e8df0338e6f1152e36e7a69a36baa802bb184106c7c4585d0cb5f872c00",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/migracao64-pipeline/reviews/warnings-v6-20261019T184617Z-b9530a38/MINHA_ANALISE.md",
+      "source_sha256": "fef72222fdb9d167378638feb7c74603a3b1d7d5cd85b3e98eed46883aa68adf",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "17-WIRE_ABI_VALIDATION_PLAN_EN.json",
+      "bytes": 6643,
+      "sha256": "fd99cd9b49b9b3d360d756f1a04093208a167597c4121554eb1a73a8d72029e9",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/migracao64-pipeline/reviews/wire-abi32-64-validation-plan.json",
+      "source_sha256": "684d4446577700f633999de1d961507c9cf26d966754dbfd56c7d9afc2deaf0a",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "18-REPOSITORY_README_SNAPSHOT_EN.md",
+      "bytes": 3748,
+      "sha256": "8dbd7e92ad3a527fd5a1b7d8853d73acb2ef344c969e8fb1f9ff0132b40b220e",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/fase28-documentacao/sync-20261019T185958Z-b300bd56/Dragon-Ball-Online/README.md",
+      "source_sha256": "7425002597046e39d38d6db6b023be7fffc77ad129be4487dfc56dd0ba2f134a",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "19-VIDEO_INVESTIGATION_HISTORY_EN.md",
+      "bytes": 6173,
+      "sha256": "979cfa7137c4f59fcbbb8778429ed474255c9b177ed0a913c79bc8d5cc588d6b",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/video64-probe/HISTORY.md",
+      "source_sha256": "555c3c64e04bc94137b2fa00b981cc5f4a685e1ea9fcbf7f17d76d1289375850",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "20-SDK1_FRESH_FRAME_V2_OBSERVATIONS_EN.md",
+      "bytes": 2257,
+      "sha256": "b51e3d67247497d7a1731096b3ee5b45d0c7d3070192b764923e8019a2805074",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/video64-probe/SDK1_FRESH_OBSERVATIONS.md",
+      "source_sha256": "2db98b910f7a97de9ef34b6c37ef9419e795f9f6dbb0b6963f7342ee3fc581a4",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "21-SDK1_FRESH_FRAME_V3_FOLLOWUP_EN.md",
+      "bytes": 1972,
+      "sha256": "bda6b289d194cb8f7108798e9590ad84f4f07315eb3d31c7f5e773f5b5faaddf",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/video64-probe/SDK1_FRESH_V3_FOLLOWUP.md",
+      "source_sha256": "833dcc857d055fb30499c8a2051cc0ab183c3fc4ecb48feae88e71748502134d",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    },
+    {
+      "file": "22-SDK1_D3D9_V4_HISTORY_EN.md",
+      "bytes": 2514,
+      "sha256": "a034ebcabc59a012ab494819cc9de96b60a7b1fd8fc5b0fb64687be89dad1e16",
+      "source_snapshot": "<PRIVATE_EVIDENCE_ROOT>/video64-probe/SDK1_D3D9_V4_HISTORY.md",
+      "source_sha256": "e59cd1721ff4397dd70be13e5dcb7f654cf77d95f42d8f66a590b485e5f8b235",
+      "language": "English",
+      "narrative_voice": "first person",
+      "technical_scope": "I preserve the recorded revision and its stated limits; I do not retroactively expand the results."
+    }
+  ],
+  "checksum_note": "I list the other public files in 24-SHA256SUMS.txt. I retain that checksum file hash separately to avoid a self-reference."
+}

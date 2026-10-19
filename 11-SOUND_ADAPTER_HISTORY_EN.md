@@ -1,0 +1,19 @@
+# My private SDK2 sound adapter implementation
+
+> Historical context: I preserve this complete record as a historical revision. Pending, not-yet-integrated, or untested statements below describe that revision at the time. I keep later qualification separate and do not retroactively broaden these results. The named local evidence artifacts are references, not attachments to this document.
+
+I defined the SoundProxy scope and settled on the SDK2-only interface before implementing this. I kept the same SDK2 object across verification and each Open: `IAdapterSound::SetSilentMode` changes mode only while closed. `CreateAdapterSound` returns one reference and does not open a device or start a thread. I did not include SDK1 headers in this translation unit.
+
+I read the vendor's DS and NULL examples as private dependencies. I preserved their copyright attribution and did not publish their code. I ported the required behavior using actual Windows APIs: a secondary DirectSound PCM ring with the caller's HWND and `DSSCL_NORMAL`, logarithmic 0..255 volume, played-cursor clock, pause/resume, Stop/Start reset, shadow-buffer Restore, and native event/thread cleanup. I did not create a hidden window, change the primary audio format or use a physical device during tests.
+
+For NULL mode I used the real QPC clock, excluding paused time. I drain only the callback sample frames due at that clock, with bounded pulls. I did not reuse the earlier accelerated headless probe clock, infer time from bytes pulled, or implement volume as `E_NOTIMPL`. NULL volume is validated and retained even though the selected mode deliberately emits no sound.
+
+I retained callbacks with AddRef while a session is open, invoke them outside locks, and release them after the worker is finished. The worker owns independent session state, so callback-driven Close or last Release can stop the device immediately without self-joining or accessing a destroyed adapter. SDK/backend teardown must explicitly Close before releasing its objects, as required by my interface contract.
+
+My first complete native run, `tests/native-20261019T165147Z-76aa4167`, compiled the production translation unit and real-source fixture with `/W4 /WX`, then passed. The fixture uses actual SDK2 and Windows COM declarations and actual UCRT, worker threads, events, locks and allocation; only QPC/owner/DirectSound endpoints are controlled facades. No SDK DLL, game, window or physical audio hardware was opened.
+
+During my review I found that my new first candidate could continue looping stale ring PCM when the decoder callback returned no further samples. I copied all initial source/test bytes and their pins to `history/before-underflow-v1` before editing. I changed the empty-queue path to stop the buffer, preserve its clock and reanchor the next fresh write. I extended the same fixture with starvation/resumption and DirectSound reentrant Close cases.
+
+The preserved first candidate failed exactly two safe checks in the stronger common oracle: stopping stale playback on an empty queue, and keeping it stopped while the callback returns zero. The current candidate passed all 879 checks; both variants compiled without warnings. `tests/native-v2-20261019T165432194011Z/receipt.json` preserves the two results and exact source pins. I did not rewrite or retroactively broaden the first success receipt.
+
+I have not opened a real audio device, measured AV sync or established runtime/product equivalence. Device/driver timing, cursor wrap under prolonged scheduling stalls and hostile callbacks that never return remain integration considerations. Close waits for an in-flight callback on another thread; it cannot safely force-terminate arbitrary callback code. I did not claim legal rights to redistribute the vendor implementation or DLL. I kept any Core integration and later runtime tests as separate work.

@@ -1,0 +1,138 @@
+{
+  "state": "PLANNED_NOT_COMPILED_OR_RUN",
+  "utc": "2026-10-19T16:06:09.436080+00:00",
+  "current_full_native_plan": {
+    "path": "<PRIVATE_EVIDENCE_ROOT>/migracao64-pipeline/builds/20261019-124920-5d446d3a/plan.json",
+    "sha256": "85f7e711e1bd918b1e70b019251681ee3ff93740b1bcc54743b4c3be9606c679",
+    "source_manifest": {
+      "path": "<PRIVATE_EVIDENCE_ROOT>/migracao64-pipeline/source-freeze-attempt2.json",
+      "bytes": 3247995,
+      "sha256": "5d976b46f84472c4b306d9860f68c96389efdb010f99b0055ecc0be2c0d9f4a4"
+    }
+  },
+  "goal": "I retain this as my historical plan to prove that my preserved32 client and new64 client encode exactly the same network wire contracts expected by unchangedServer19; I qualify internal native layouts separately.",
+  "inputs": [
+    {
+      "path": "DboShared/NtlShared2/NtlPacketCommon.h",
+      "sha256": "fdfd08ee95dbc0aa4944589deebb7329f1d03295426bd3e23e5c1d54207348f1",
+      "direct_BEGIN_PROTOCOL_count": 1
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketAU.h",
+      "sha256": "bd2f5fa49640aa80ddc9fce5710a382a22aa9849235daa87122fbbadfd0012e0",
+      "direct_BEGIN_PROTOCOL_count": 2
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketUA.h",
+      "sha256": "9d6cdf1ab85ab311ef0d0c4cc512d35c2d8be2131f97ea3eddec5bec9cbd3cd0",
+      "direct_BEGIN_PROTOCOL_count": 2
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketCU.h",
+      "sha256": "93de368db22205925851e1657f8c230ffabc7cc46c421153a98498fd44e30e95",
+      "direct_BEGIN_PROTOCOL_count": 22
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketUC.h",
+      "sha256": "68ff898cbbe656b427dfcb4a98af7d6bee19e0a4611a88704ecbda366cf2286a",
+      "direct_BEGIN_PROTOCOL_count": 12
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketUG.h",
+      "sha256": "80dc6bdadec030616ca045b1d5ed54ddcb2c7f8d20bbdcd0359965140ad1eef6",
+      "direct_BEGIN_PROTOCOL_count": 330
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketGU.h",
+      "sha256": "aae5fee162ce18b17dded7ea473fdecdcf0336b8b8248c6c33cdf165caace8b8",
+      "direct_BEGIN_PROTOCOL_count": 682
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketGQ.h",
+      "sha256": "a2f6e8b4e54acaae7070899202bec10cef8f291d0c18d5412d0be5bbd7f87fcb",
+      "direct_BEGIN_PROTOCOL_count": 252
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketQG.h",
+      "sha256": "b251c084febbd9d09ddcb608a934b1b7d5c0d19db0afe5fc0263c940a8229eec",
+      "direct_BEGIN_PROTOCOL_count": 247
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketTU.h",
+      "sha256": "eb8363605ddac1dfff340e620d1aae8b4288fadf924a277ab3839e8104cd627a",
+      "direct_BEGIN_PROTOCOL_count": 96
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlPacketUT.h",
+      "sha256": "bee37596f164c42476d4a29d94786c0b5b6b300c90fcc3fa91e99622b9d541a3",
+      "direct_BEGIN_PROTOCOL_count": 46
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlInventorySort.h",
+      "sha256": "551619b8fa2d3a177e43d28a3565c08450f8ba9fe97a51e49e1ed61a23f98b03",
+      "direct_BEGIN_PROTOCOL_count": 0
+    },
+    {
+      "path": "DboShared/NtlShared2/NtlInventoryStackSort.h",
+      "sha256": "85c737f33dfdbdc948e689188efe594cc5dec8b33bc71ef827559c82ba23ea85",
+      "direct_BEGIN_PROTOCOL_count": 0
+    }
+  ],
+  "procedure": [
+    {
+      "stage": 1,
+      "name": "Native architecture and typedef proof",
+      "requirements": [
+        "I wait for the actual native build exit and an explicit compiler budget.",
+        "I compile separate real Win32 and AMD64 consoles and preserve the original runners and generated outputs.",
+        "I assert actual PE I386 vs AMD64 and sizeof(void*)4 vs8, WORD2/DWORD4/WCHAR2/HOBJECT4/TBLIDX4/ITEMID8.",
+        "I use real shared protocol headers with both relevant client/server include orders, without a packet-struct facade or a changed PACKET_MAX_SIZE."
+      ]
+    },
+    {
+      "stage": 2,
+      "name": "Complete protocol fingerprints",
+      "requirements": [
+        "I generate opcode numeric values and sizeof for all BEGIN_PROTOCOL structs and BEGIN_PROTOCOL_IDENTITY aliases in the selected headers.",
+        "I emit offsetof and array element sizes for critical auth/character/enterworld/item/coupon/SortV1/SortV2 payloads.",
+        "I compare both JSON fingerprints exactly and fail on any opcode, packing, signedness, size or field-offset mismatch.",
+        "I assert StackSort Move25, ClientMove10, MaxItems160 and every new fixed/dynamic wire frame at or below4095."
+      ]
+    },
+    {
+      "stage": 3,
+      "name": "Byte-level golden packets",
+      "requirements": [
+        "I zero-initialize and fill real structs deterministically, without raw pointers or test accounts.",
+        "I cover token0xFEDCBA9876543210, handles/tblidx high32, signed option values0/INT_MAX/INT_MIN/-1, multilingualWCHAR2 fields, stack donor deletion and retainedcount/cap.",
+        "I compare serialized Win32/AMD64 byte streams and lengths exactly, including V1 compatibility and complete160-entry V2 frames.",
+        "I keep Known/Unknown persistence errors and invalid token/count/frame cases fail-closed."
+      ]
+    },
+    {
+      "stage": 4,
+      "name": "Production-path regression",
+      "requirements": [
+        "I port exact-header packet-data-contract and inventory-stack-sort-client23-v2 bodies to AMD64 variants without deleting or weakening the original32 assertions.",
+        "I exercise the actual packet GetPacketData BYTE* contract, checked framing/length, one SendPacket call and its preserved return.",
+        "I re-run coupon exact-lock/correlation, shared loader option-value/ownership, and current client Sort callback/reentrancy cases only after reviewing the architecture adapters.",
+        "I require no databaseDML, service restart, game login or live network test for these ABI consoles."
+      ]
+    }
+  ],
+  "existing_runners": [
+    "operacao/testes/packet-data-contract.py",
+    "operacao/testes/packet-data-native-contract.h",
+    "operacao/testes/inventory-stack-sort-v2.py",
+    "operacao/testes/inventory-stack-sort-client23-v2.py",
+    "operacao/testes/inventory-stack-sort-client23-v2-consumers.py",
+    "operacao/testes/upgrade-coupons-correlation.py",
+    "operacao/testes/item-option-value24.py",
+    "operacao/testes/query-item-owner-transfer.py"
+  ],
+  "separate_limits": [
+    "I do not interpret passing protocol ABI as certification of gameplay, GUI, GPU, native DFF streams, BVL64 or long-session memory.",
+    "I do not carry over Win32 internal class size100/audio,5112/actor or facadeCombo44 as expected AMD64 sizes.",
+    "I did not invoke a native compiler to produce this plan."
+  ]
+}
