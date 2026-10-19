@@ -1,0 +1,119 @@
+{
+  "schema": "opendbo-gfx-allocation-guards/v1",
+  "author": "NoobMaster70",
+  "statement": "I provide only my minimal allocation-guard changes, not a Scaleform SDK or a redistribution license. I require a lawfully obtained matching external SDK.",
+  "patch": {
+    "path": "gfx-allocation-guards.patch",
+    "bytes": 3073,
+    "sha256": "ecbb125377dabd617c07bf62951c90aaac4c236f76381d8f951f2392b62d227e"
+  },
+  "files": [
+    {
+      "path": "Src/GFxPlayer/GFxTagLoaders.cpp",
+      "before": {
+        "bytes": 67371,
+        "sha256": "6f24333d7e8884aaac362572e07399cc9e9a58c71a531c90baea2ad0df5782e8"
+      },
+      "after": {
+        "bytes": 69405,
+        "sha256": "13e28b02d6d7e10f4dbcf2663f89547c3a309e814f9539733cc8b2720e0ae2e5"
+      },
+      "before_projection": {
+        "bytes": 65467,
+        "sha256": "6d8f394a9c97e1feda78159a5e6667e3766b5ab117d26b3cf3550f7c03752812"
+      },
+      "after_projection": {
+        "bytes": 67454,
+        "sha256": "215069984044dfa6589fced78aea3589d57e6ab17e92e6664c78842545ad402e"
+      },
+      "after_format": {
+        "encoding": "raw-bytes",
+        "newline_mode": "CRLF",
+        "newline_count": 1951,
+        "crlf_line_indices": [],
+        "final_newline": true
+      }
+    },
+    {
+      "path": "Src/GKernel/GImage.cpp",
+      "before": {
+        "bytes": 41122,
+        "sha256": "66b17de91041d7435572d8e655376cda03d7dd832b089c488498a42f6497151e"
+      },
+      "after": {
+        "bytes": 41159,
+        "sha256": "a61d8fda04914b82dcc93197196130249d6da5ff260a527c4c4b14c5e2bdbd21"
+      },
+      "before_projection": {
+        "bytes": 39816,
+        "sha256": "9e998cba2b7da49669393fbcd5217de8dc7c3dd6ed384f3a8c34b7354b15a310"
+      },
+      "after_projection": {
+        "bytes": 39851,
+        "sha256": "aab5ef34ad676a55b51141c0793f7e585186269082022c1bf8bbf6551f9a0dc9"
+      },
+      "after_format": {
+        "encoding": "raw-bytes",
+        "newline_mode": "CRLF",
+        "newline_count": 1308,
+        "crlf_line_indices": [],
+        "final_newline": true
+      }
+    }
+  ],
+  "original_amd64_archive": {
+    "path": "Lib/x64/Msvc80/Release/libgfx.lib",
+    "sha256": "f82410f09bbddff49e054a81c2bcea7319cca21f3052452bfc0a22514b7f97b9",
+    "object_count": 188
+  },
+  "replacement_objects": [
+    "GFxTagLoaders.obj",
+    "GImage.obj"
+  ],
+  "unchanged_objects": 186,
+  "guards": {
+    "temporary_buffers": 5,
+    "image_results": 2,
+    "image_object": 1
+  },
+  "historical_proof": {
+    "headless_checks": 48,
+    "failures": 0,
+    "scope": "I retain this as the measured native historical oracle, not a new execution or universal memory-retention fix."
+  },
+  "native_recipe": {
+    "toolset": "MSVC v142 x64",
+    "source_compiler_flags": [
+      "/c",
+      "/O2",
+      "/MT",
+      "/GR-",
+      "/Zl",
+      "/Zi",
+      "/DNDEBUG",
+      "/DWIN32",
+      "/D_WINDOWS",
+      "/D_CRT_SECURE_NO_WARNINGS"
+    ],
+    "sdk_include_directories": [
+      "Include",
+      "Src/GKernel",
+      "Src/GFxPlayer",
+      "Src/GSoundRenderer",
+      "Src/GRenderer",
+      "Src/GFxAudio",
+      "Src/GFxXML",
+      "Src/GFxIME",
+      "3rdParty/zlib-1.2.3",
+      "3rdParty/jpeg-6b",
+      "3rdParty/libpng",
+      "3rdParty/expat-2.0.1/lib"
+    ],
+    "archive_operation": "I remove exactly GFxTagLoaders.obj and GImage.obj from a copy of the original archive and add the two new AMD64 objects. I compare all188 object payloads: exactly2changed and186byteidentical. I require the48-check allocation-failure oracle separately."
+  },
+  "limits": [
+    "I do not include SDK headers, full source files, libraries, codecs or binaries.",
+    "I do not infer legal redistribution entitlement from technical compatibility.",
+    "These guards do not establish the cause of historical OOM, retained virtual address space or Alt+Tab freezing."
+  ]
+}

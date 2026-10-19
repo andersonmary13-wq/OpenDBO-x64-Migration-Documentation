@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(Migration64DependencyProps)" Condition="Exists('$(Migration64DependencyProps)')" />
+  <PropertyGroup><DXSDK_DIR>$(Migration64DirectXSDK)</DXSDK_DIR></PropertyGroup>
+  <PropertyGroup Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64'">
+    <OutDir Condition="'$(ConfigurationType)' == 'StaticLibrary'">$(Migration64BuildRoot)lib\</OutDir>
+    <OutDir Condition="'$(ConfigurationType)' != 'StaticLibrary'">$(Migration64BuildRoot)bin\</OutDir>
+    <IntDir>$(Migration64BuildRoot)obj\$(MSBuildProjectName)\</IntDir>
+    <TLogLocation>$(IntDir)$(MSBuildProjectName).tlog\</TLogLocation>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <PostBuildEventUseInBuild Condition="'$(MSBuildProjectName)' == 'Client' or '$(MSBuildProjectName)' == 'NtlSound'">false</PostBuildEventUseInBuild>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(Migration64DirectXSDK)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(MSBuildProjectName).pch</PrecompiledHeaderOutputFile>
+      <ProgramDataBaseFileName>$(IntDir)$(MSBuildProjectName).pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <Lib><OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile></Lib>
+    <Link>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(Migration64BuildRoot)lib\$(TargetName).lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>$(Migration64BuildRoot)lib;$(Migration64RenderWareLibRoot);$(Migration64DirectXSDK)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64' and '$(MSBuildProjectName)' == 'NtlXMLLoader'">
+    <Midl><OutputDirectory>$(IntDir)midl\</OutputDirectory><HeaderFileName>%(Filename)_h.h</HeaderFileName><InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName></Midl>
+    <ClCompile><AdditionalIncludeDirectories>$(IntDir)midl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+  </ItemDefinitionGroup>
+  <Target Name="Migration64MidlOutputGuard" BeforeTargets="Midl" Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64' and '$(MSBuildProjectName)' == 'NtlXMLLoader'">
+    <Error Condition="'%(Midl.OutputDirectory)' != '$(IntDir)midl\'" Text="I keep MIDL outputs inside the per-build intermediate directory." />
+    <Error Condition="'%(Midl.HeaderFileName)' != '%(Midl.Filename)_h.h' or '%(Midl.InterfaceIdentifierFileName)' != '%(Midl.Filename)_i.c'" Text="I preserve the original generated header/IID names." />
+  </Target>
+  <Target Name="Migration64ExplicitGuard" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(Migration64Enabled)' != 'true' or '$(Platform)' != 'x64' or '$(Configuration)' != 'Release'" Text="I require explicit Release x64 migration mode." />
+    <Error Condition="!Exists('$(Migration64DependencyProps)') or !Exists('$(Migration64DirectXSDK)Include\d3d9.h')" Text="I require the pinned external dependency contract and official DirectX headers." />
+  </Target>
+</Project>

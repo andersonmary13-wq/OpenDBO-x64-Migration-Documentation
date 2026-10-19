@@ -1,0 +1,198 @@
+{
+  "schema": "opendbo-public-source-package-verification/v1",
+  "prepared_utc": "2026-10-19T21:52:49.959550+00:00",
+  "author": "NoobMaster70",
+  "statement": "I verified the exact source reconstruction and portable packaging independently of my historical native build and local gameplay. I publish this supplement on a separate branch without changing issue 138, its existing comment, my private game repository or the original documentation branch.",
+  "base_commit": "ed30bbe393653c704130aa026baf2bcad02c31ff",
+  "original_documentation_commit": "2e1ba49ee97fe136da1495370b07fa02f0db5292",
+  "source_manifest_sha256": "92cd98e07b9b7f48246c3b7e333ab2c575d33c0b7ad793e95b5fae27a2965520",
+  "source_export_manifest_state_scope": "I preserve its preparation-time status as provenance. This package verification records the later completed checks; it does not rewrite the frozen source manifest.",
+  "checks": {
+    "isolated_baseline_after_images_exact": 191,
+    "isolated_migration_after_images_exact": 35,
+    "final_distinct_raw_paths_exact": 225,
+    "new_bridge_source_files_exact": 9,
+    "public_applier_real_upstream_check_target_unchanged": true,
+    "public_applier_real_upstream_explicit_apply_final_paths_exact": 225,
+    "synthetic_git_applier_tests": {
+      "tests": 17,
+      "failures": 0
+    },
+    "synthetic_build_guard_tests": {
+      "tests": 11,
+      "failures": 0
+    },
+    "external_gfx_minimal_patch_sources_exact": 2,
+    "portable_wire_cpp_and_project_match_historical_generator": true,
+    "portable_wire_preparation_and_output_guards": "PASS",
+    "python_syntax": "PASS",
+    "powershell_parser_errors": 0,
+    "msbuild_props_xml": "PASS",
+    "native_product_build_repeated_for_public_tools": false,
+    "native_wire_2304_run_repeated_for_public_tool": false,
+    "vendor_sdk_executed_during_public_packaging": false,
+    "game_or_server_run_during_public_packaging": false
+  },
+  "preserved_failure": "I retained the first actual-upstream applicator refusal caused by clean Git LF-to-CRLF conversion, then verified only same-encoding/BOM, pinned-projection, reconstructable-before-image admission. Neither frozen patch changed.",
+  "licensing_scope": "I retain upstream and vendor notices. I have not confirmed redistribution permission for vendor-derived portions. I do not treat attribution as a license or include complete proprietary SDKs, libraries, DLLs or registration inputs.",
+  "privacy_screen": "I screened added and deleted patch lines and selected source/tools/docs for known registration values, credentials, private keys and personal paths. I excluded private preparation trees, bytecode, generators, logs, personal settings and the GM reference.",
+  "historical_results": "I retain my zero-error, 573-warning local native build and limited few-hour local-server observation in the published reports. Excessive repeated Alt+Tab could freeze Win32 and x64; I have not established a cause or fix.",
+  "files": [
+    {
+      "path": "0001-baseline191.patch",
+      "bytes": 439134,
+      "sha256": "6056fd3ac4918b0bf2991e33e75321cf0d57c3a88e0b7de28d94fadf6593d4b7"
+    },
+    {
+      "path": "0002-x64-migration35.patch",
+      "bytes": 107642,
+      "sha256": "5f0d4cb57d7585c4b3af1aec4ef7ead92bc2e4a199fb0b04509a600e39029da8"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.cpp",
+      "bytes": 12654,
+      "sha256": "5430de7f855d38e3f654bf535b32014c2d894272b23d9df9c060b686656b0231"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.h",
+      "bytes": 1820,
+      "sha256": "060b25745de36a4735daeec501debbf4d31ff0d3fb18cc5b7b9892176898c6eb"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.cpp",
+      "bytes": 32147,
+      "sha256": "f27f754a46cd973e6ed2c0b780415470457598ba720f20244b75f18ee10946ae"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.h",
+      "bytes": 3099,
+      "sha256": "738276e2596795a7077499b298dd1d9cc686de7fec7806e4f2f7adafaaf086ca"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Sdk21Native.h",
+      "bytes": 294,
+      "sha256": "2fdf602724d0350ad70a610e4b9cad274b4b94a01afaf60b9b166f60f2526485"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2Sound.cpp",
+      "bytes": 19627,
+      "sha256": "5e97f5f59a18d3e13122f150b2f1d56381db57a11c7e049f261829c195a72db5"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2SoundFactory.h",
+      "bytes": 495,
+      "sha256": "9efc031af8a64abcb7a159d4839b369b02492c963000bec3d8763ebf6caf3b88"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.cpp",
+      "bytes": 2186,
+      "sha256": "bbab51bcdd43792c579eb0fd095da505b17f2bed590947527faeb899298a5b0d"
+    },
+    {
+      "path": "new-files/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.h",
+      "bytes": 1188,
+      "sha256": "6d75f1040bcaf5de4a520857c533bc07d7b14a5dcc3958f2f5b509efb676430e"
+    },
+    {
+      "path": "source-export-manifest.json",
+      "bytes": 355466,
+      "sha256": "92cd98e07b9b7f48246c3b7e333ab2c575d33c0b7ad793e95b5fae27a2965520"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5750,
+      "sha256": "6e712efdf406edd3502497a04eb1ab60217389d085694858be06ca15ac81235e"
+    },
+    {
+      "path": "docs/TEST_RESULTS_EN.md",
+      "bytes": 6097,
+      "sha256": "29219b9077a7bf7cf0d0974f1621fab49c0336dd0237f79680bc6444c9c9487c"
+    },
+    {
+      "path": "docs/BUILDING_X64_EN.md",
+      "bytes": 9465,
+      "sha256": "3121107c35a6d57866f960558a733e372a1c209a469388ae054684611657a986"
+    },
+    {
+      "path": "licenses/THIRD_PARTY_NOTICES.md",
+      "bytes": 10473,
+      "sha256": "b8c43c709955632a63e118678219afa59ddc0a32f93f732a511d6e104adf6060"
+    },
+    {
+      "path": "licenses/LICENSING_SCOPE_EN.md",
+      "bytes": 2546,
+      "sha256": "ba591e9194e3a769c7426176850caee9afae9c39f5266cd28162acbcbea7c14e"
+    },
+    {
+      "path": "licenses/LICENSE_AGPL-3.0.txt",
+      "bytes": 35184,
+      "sha256": "6f1e622c82a380075843bb084a7ec3b1f1d12a4a02526d75e78b0924a860aa75"
+    },
+    {
+      "path": "tests/test_apply_migration.py",
+      "bytes": 12779,
+      "sha256": "6847088782e0d622ebc957815848f332f30c41423099e8778ad0ead21741961b"
+    },
+    {
+      "path": "tests/test_build_support.py",
+      "bytes": 7436,
+      "sha256": "5aeca6ee3a3a66175879eee877837becfdebb2a128343e5b6e73a1ca8b52b5b3"
+    },
+    {
+      "path": "tests/wire_abi.py",
+      "bytes": 18463,
+      "sha256": "403ceb3e4202719c3484a4a5ac5a516db7847f6fda28d4ddbe5ed4d735b60cf1"
+    },
+    {
+      "path": "tests/WIRE_ABI_README.md",
+      "bytes": 2329,
+      "sha256": "04e955da2769c3c852508881cf04239094f0a14282d8910267d4a89355da0d82"
+    },
+    {
+      "path": "tools/apply_migration.py",
+      "bytes": 20490,
+      "sha256": "9652f23db890fcfe1ccc1ff65f66d91cbc786b2bf65d6bbcc7cedf3da2dc0771"
+    },
+    {
+      "path": "tools/Build-Client64.ps1",
+      "bytes": 4840,
+      "sha256": "c8e1a7eba71fa0f75d03b12f25aa429d89beffb8153fe26ea48882a9e40db70c"
+    },
+    {
+      "path": "tools/build_support.py",
+      "bytes": 14544,
+      "sha256": "e7ed549a991afa432dd0b247ee00fd1bb03bba042c0bad203698aa585af3a856"
+    },
+    {
+      "path": "tools/Client64.Output.props",
+      "bytes": 3746,
+      "sha256": "7885372e3bf0b43044e2d30a9249c13535a485a6cce4e9144d70347389976c78"
+    },
+    {
+      "path": "tools/RenderWare64.Output.props",
+      "bytes": 1163,
+      "sha256": "1393f5acc3b089139dc6114a6de6457643f572636117c1313ce7b9fb9d1eb02f"
+    },
+    {
+      "path": "tools/Dependency64.props",
+      "bytes": 1421,
+      "sha256": "673694d2d1367dc0eb61f885105af4d81d5ba4b87aea9d7d176c913b628a46e2"
+    },
+    {
+      "path": "tools/prepare_gfx_guards.py",
+      "bytes": 3863,
+      "sha256": "3d293907410820984b55a130c4c56838ffc3f65cfc803fb32f4f14f51e9f69ac"
+    },
+    {
+      "path": "dependencies/gfx-allocation-guards.patch",
+      "bytes": 3073,
+      "sha256": "ecbb125377dabd617c07bf62951c90aaac4c236f76381d8f951f2392b62d227e"
+    },
+    {
+      "path": "dependencies/gfx-guards-manifest.json",
+      "bytes": 3936,
+      "sha256": "8d2e8ef3d97364e9ec1f5aa6937fdb671cba690b306175e47f664d8da77a2799"
+    }
+  ],
+  "checksums_scope": "I list this verification file, the 31 reviewed source files and my new branch README in SHA256SUMS.txt. I omit that checksum file from its own list."
+}

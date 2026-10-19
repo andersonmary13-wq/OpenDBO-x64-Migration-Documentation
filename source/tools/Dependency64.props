@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64'">
+    <GFXSDK_DIR>$(Migration64GFxSDKRoot)</GFXSDK_DIR>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Migration64Enabled)' == 'true' and '$(Platform)' == 'x64'">
+    <ClCompile><AdditionalIncludeDirectories>$(Migration64BandiSDK2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(Migration64DependencyRoot)link;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(Migration64DependencyRoot)link\fmod_cpp_wrapper.lib;dsound.lib;dxguid.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="Dependency64BuildGuard" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(Migration64Enabled)' != 'true' or '$(Platform)' != 'x64' or '$(Configuration)' != 'Release'" Text="I require explicit Release x64 migration mode." />
+    <Error Condition="!Exists('$(Migration64DependencyRoot)link\libgfx.lib') or !Exists('$(Migration64GFxSDKRoot)') or !Exists('$(Migration64BandiSDK2Include)')" Text="I require the pinned guarded GFx archive and explicit external SDK directories; I provide no stock fallback." />
+  </Target>
+</Project>

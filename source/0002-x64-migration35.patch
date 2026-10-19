@@ -1,0 +1,1968 @@
+diff --git a/DboClient/BVL/BandiVideo.h b/DboClient/BVL/BandiVideo.h
+--- a/DboClient/BVL/BandiVideo.h
++++ b/DboClient/BVL/BandiVideo.h
+@@ -14,0 +15,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++#include "../Lib/NtlMovie/Video21Bridge/Video21Integration.h"
++#endif // OPENDBO_VIDEO21
+@@ -271,0 +275,13 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	HRESULT InitLibrary(LPCTSTR szDllPathName)
++	{
++		UNREFERENCED_PARAMETER(szDllPathName);
++		if(m_pCreateBandiVideo || m_pBVL)return BVERR_ALREADY_CREATED;
++		HRESULT hr=opendbo_bandi_adapter::ConfigureInstalledVideo21Policy();
++		if(FAILED(hr))return hr;
++		m_pCreateBandiVideo=&opendbo_bandi_adapter::CreateLegacyVideo21;
++		hr=CreateBandiVideo(m_pBVL);
++		if(FAILED(hr))m_pCreateBandiVideo=NULL;
++		return hr;
++	}
++#else // OPENDBO_VIDEO21
+@@ -311,0 +328 @@
++#endif // OPENDBO_VIDEO21
+@@ -314,0 +332,10 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	void DestroyLibrary()
++	{
++		if(m_pBVL && FAILED(m_pBVL->Release()))return;
++		m_pBVL=NULL;
++		m_pCreateBandiVideo=NULL;
++		// The bridge owns the actual SDK2 module. This is never a fake HMODULE.
++		m_hDll=NULL;
++	}
++#else // OPENDBO_VIDEO21
+@@ -323,0 +351 @@
++#endif // OPENDBO_VIDEO21
+@@ -329,0 +358,4 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	BOOL IsCurrentEof(WPARAM instance,LPARAM generation){return opendbo_bandi_adapter::IsCurrentVideo21Eof(m_pBVL,instance,generation)?TRUE:FALSE;}
++	HRESULT BeforeVideo21Reset(){return m_pBVL?opendbo_bandi_adapter::BeforeVideo21DeviceReset(m_pBVL):S_OK;}
++#endif // OPENDBO_VIDEO21
+@@ -361,0 +394,11 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	virtual	HRESULT	Create(HWND	hWnd, LPVOID context=NULL, BVL_CONTEXT_TYPE contextType=BVL_CONTEXT_DIRECTX9)
++	{
++		if(!m_pBVL){
++			HRESULT hr=CreateBandiVideo(m_pBVL);
++			if(FAILED(hr))return hr;
++			if(!m_pBVL)return E_UNEXPECTED;
++		}
++		return m_pBVL->Create(hWnd,context,contextType);
++	}
++#else // OPENDBO_VIDEO21
+@@ -372 +415,11 @@
+-
++#endif // OPENDBO_VIDEO21
++
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	virtual	HRESULT	Release() 
++	{
++		if(!m_pBVL)return S_OK;
++		HRESULT hr=m_pBVL->Release();
++		if(SUCCEEDED(hr))m_pBVL=NULL;
++		return hr;
++	}
++#else // OPENDBO_VIDEO21
+@@ -380,0 +434 @@
++#endif // OPENDBO_VIDEO21
+diff --git a/DboClient/BVL/MoviePlayer.cpp b/DboClient/BVL/MoviePlayer.cpp
+--- a/DboClient/BVL/MoviePlayer.cpp
++++ b/DboClient/BVL/MoviePlayer.cpp
+@@ -140,0 +141,4 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	hr=m_BVL.Verify(dBVL_NTL_ID,dBVL_NTL_PASSWARD);
++	if(FAILED(hr)){m_BVL.Close();m_BVL.Release();m_BVL.DestroyLibrary();return FALSE;}
++#else // OPENDBO_VIDEO21
+@@ -141,0 +146 @@
++#endif // OPENDBO_VIDEO21
+@@ -367,0 +373,18 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++VOID CMoviePlayer::Render()
++{
++	if(m_bRelease){Release();return;}
++	if(!IsPlay())return;
++	if(m_BVL.CheckFrame()){
++		IDirect3DTexture9* curframe=NULL;
++		if(m_BVL.GetLastFrame(&curframe)!=S_OK || !curframe)return;
++		{
++			opendbo_bandi_adapter::Video21FrameLease<CBandiVideoLibrary> lease(&m_BVL,curframe);
++			RenderD3D(curframe);
++		}
++		// Present can dispatch Stop; destruction was retained while the lease
++		// was outstanding and can now complete without orphaning the decoder.
++		if(!IsPlay())m_BVL.DestroyLibrary();
++	}
++}
++#else // OPENDBO_VIDEO21
+@@ -396,0 +420 @@
++#endif // OPENDBO_VIDEO21
+@@ -452,0 +477,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++		if(!m_BVL.IsCurrentEof(wParam,lParam))return MOVIE_HANDLE_EVENT_OK;
++#endif // OPENDBO_VIDEO21
+diff --git a/DboClient/Client/Addin/DboAddinManager.cpp b/DboClient/Client/Addin/DboAddinManager.cpp
+--- a/DboClient/Client/Addin/DboAddinManager.cpp
++++ b/DboClient/Client/Addin/DboAddinManager.cpp
+@@ -7 +6,0 @@
+-#ifndef _WIN64
+@@ -10 +8,0 @@
+-#endif
+@@ -29 +26,0 @@
+-#ifndef _WIN64
+@@ -31 +27,0 @@
+-#endif
+@@ -39 +34,0 @@
+-#ifndef _WIN64
+@@ -41 +35,0 @@
+-#endif
+@@ -66 +59,0 @@
+-#ifndef _WIN64
+@@ -69 +61,0 @@
+-#endif
+diff --git a/DboClient/Client/Client.vcxproj b/DboClient/Client/Client.vcxproj
+--- a/DboClient/Client/Client.vcxproj
++++ b/DboClient/Client/Client.vcxproj
+@@ -561 +561 @@
+-    <ClInclude Include="MascotStatusBarGui.h" />
++    <ClInclude Include="Gui\MascotStatusBarGui.h" />
+diff --git a/DboClient/Client/Main/DboApplication.cpp b/DboClient/Client/Main/DboApplication.cpp
+--- a/DboClient/Client/Main/DboApplication.cpp
++++ b/DboClient/Client/Main/DboApplication.cpp
+@@ -95 +94,0 @@
+-#ifndef _WIN64
+@@ -97 +95,0 @@
+-#endif
+@@ -112 +109,0 @@
+-#ifndef _WIN64
+@@ -114 +110,0 @@
+-#endif
+@@ -173 +168,0 @@
+-#ifndef _WIN64
+@@ -203 +197,0 @@
+-#endif
+@@ -584 +577,0 @@
+-#ifndef _WIN64
+@@ -590 +582,0 @@
+-#endif
+@@ -1377 +1368,0 @@
+-#ifndef _WIN64
+@@ -1379 +1369,0 @@
+-#endif
+@@ -1421 +1410,0 @@
+-#ifndef _WIN64
+@@ -1423 +1411,0 @@
+-#endif
+@@ -1750,3 +1737,0 @@
+-#if defined(_WIN64)
+-	bUserScreen = TRUE;
+-#endif
+diff --git a/DboClient/Lib/Discord/Discord.h b/DboClient/Lib/Discord/Discord.h
+--- a/DboClient/Lib/Discord/Discord.h
++++ b/DboClient/Lib/Discord/Discord.h
+@@ -17,3 +16,0 @@
+-#if defined(_M_X64) || defined(_WIN64)
+-#include "discord_rpc_minimal.h"
+-#else
+@@ -22 +18,0 @@
+-#endif
+diff --git a/DboClient/Lib/Discord/Discord.vcxproj b/DboClient/Lib/Discord/Discord.vcxproj
+--- a/DboClient/Lib/Discord/Discord.vcxproj
++++ b/DboClient/Lib/Discord/Discord.vcxproj
+@@ -100,2 +100 @@
+-    <ClCompile Include="Discord.cpp" Condition="'$(Platform)'!='x64'" />
+-    <ClCompile Include="DiscordStub.cpp" Condition="'$(Platform)'=='x64'" />
++    <ClCompile Include="Discord.cpp" />
+diff --git a/DboClient/Lib/NtlCore/NtlCore.vcxproj b/DboClient/Lib/NtlCore/NtlCore.vcxproj
+--- a/DboClient/Lib/NtlCore/NtlCore.vcxproj
++++ b/DboClient/Lib/NtlCore/NtlCore.vcxproj
+@@ -232 +232 @@
+-    <ClInclude Include="NtlClientService.h" />
++    <ClInclude Include="..\..\Tool\DBOLauncher\NtlClientService.h" />
+diff --git a/DboClient/Lib/NtlCore/NtlDumpTarget.cpp b/DboClient/Lib/NtlCore/NtlDumpTarget.cpp
+--- a/DboClient/Lib/NtlCore/NtlDumpTarget.cpp
++++ b/DboClient/Lib/NtlCore/NtlDumpTarget.cpp
+@@ -2,0 +3 @@
++#include <limits.h>
+@@ -31 +32,2 @@
+-	if(m_pBuffer == NULL)
++	if(m_pBuffer == NULL || iLen < 0 || m_iDataSize < 0 || m_iCurrSize < 0
++		|| m_iDataSize > m_iCurrSize || iLen > INT_MAX - m_iDataSize - 1)
+@@ -34 +36,2 @@
+-	if(m_iCurrSize <= m_iDataSize + iLen)
++	const RwInt32 iRequired = m_iDataSize + iLen + 1;
++	if(m_iCurrSize < iRequired)
+@@ -36,2 +39,5 @@
+-		RwChar *pTempBuffer = NTL_NEW RwChar [m_iCurrSize + NTL_DUMP_GROW_SIZE];
+-		memset(pTempBuffer, 0, m_iCurrSize + NTL_DUMP_GROW_SIZE);
++		const RwInt32 iGrowth = m_iCurrSize <= INT_MAX - NTL_DUMP_GROW_SIZE
++			? m_iCurrSize + NTL_DUMP_GROW_SIZE : iRequired;
++		const RwInt32 iNewSize = iGrowth < iRequired ? iRequired : iGrowth;
++		RwChar *pTempBuffer = NTL_NEW RwChar [iNewSize];
++		memset(pTempBuffer, 0, iNewSize);
+@@ -42 +48 @@
+-		m_iCurrSize += NTL_DUMP_GROW_SIZE;
++		m_iCurrSize = iNewSize;
+@@ -286 +292,3 @@
+-	int nLen = (int)str.c_str(); 
++	if(str.size() > static_cast<std::size_t>(INT_MAX))
++		return *this;
++	const int nLen = static_cast<int>(str.size()); 
+diff --git a/DboClient/Lib/NtlCore/NtlSystemInfo.cpp b/DboClient/Lib/NtlCore/NtlSystemInfo.cpp
+--- a/DboClient/Lib/NtlCore/NtlSystemInfo.cpp
++++ b/DboClient/Lib/NtlCore/NtlSystemInfo.cpp
+@@ -12,5 +12,5 @@
+-	WKSTA_TRANSPORT_INFO_0*	pwkti;                  // Allocate data structure for Netbios
+-	DWORD					dwEntriesRead;
+-	DWORD					dwTotalEntries;
+-	BYTE					*pbBuffer;
+-	static unsigned char	acMACAddress[6];
++	WKSTA_TRANSPORT_INFO_0* pwkti = NULL;
++	DWORD dwEntriesRead = 0;
++	DWORD dwTotalEntries = 0;
++	BYTE* pbBuffer = NULL;
++	static unsigned char acMACAddress[6];
+@@ -19,7 +19,2 @@
+-	NET_API_STATUS dwStatus = NetWkstaTransportEnum(NULL,					// [in]  server name
+-													0,						// [in]  data structure to return
+-													&pbBuffer,				// [out] pointer to buffer
+-													MAX_PREFERRED_LENGTH,	// [in]  maximum length
+-													&dwEntriesRead,			// [out] counter of elements actually enumerated
+-													&dwTotalEntries,		// [out] total number of elements that could be enumerated
+-													NULL);					// [in/out] resume handle
++	NET_API_STATUS dwStatus = NetWkstaTransportEnum(NULL, 0, &pbBuffer,
++		MAX_PREFERRED_LENGTH, &dwEntriesRead, &dwTotalEntries, NULL);
+@@ -27 +22 @@
+-	if( NERR_Success != dwStatus )
++	if(NERR_Success != dwStatus)
+@@ -28,0 +24,2 @@
++		if(pbBuffer != NULL && NERR_Success != NetApiBufferFree(pbBuffer))
++			DBO_FAIL("Fail free buffer NetAPI");
+@@ -33 +30 @@
+-	pwkti = (WKSTA_TRANSPORT_INFO_0 *)pbBuffer;		// type cast the buffer
++	pwkti = reinterpret_cast<WKSTA_TRANSPORT_INFO_0*>(pbBuffer);
+@@ -35,2 +32,2 @@
+-	// first address is 00000000, skip it
+-	for( DWORD dwLoop = 1 ; dwLoop < dwEntriesRead; dwLoop++ )            
++	// Preserve transport order: skip the first address, retain the last valid one.
++	for(DWORD dwLoop = 1; pwkti != NULL && dwLoop < dwEntriesRead; ++dwLoop)
+@@ -38,4 +35,13 @@
+-		// enumerate MACs and print
+-		swscanf((wchar_t *)pwkti[dwLoop].wkti0_transport_address, L"%2hx%2hx%2hx%2hx%2hx%2hx", 
+-				&acMACAddress[0], &acMACAddress[1], &acMACAddress[2],
+-				&acMACAddress[3], &acMACAddress[4], &acMACAddress[5]);
++		if(pwkti[dwLoop].wkti0_transport_address == NULL)
++			continue;
++		unsigned short address[6] = {0};
++		if(swscanf(pwkti[dwLoop].wkti0_transport_address, L"%2hx%2hx%2hx%2hx%2hx%2hx",
++			&address[0], &address[1], &address[2], &address[3], &address[4], &address[5]) != 6)
++			continue;
++		bool valid = true;
++		for(DWORD index = 0; index < 6; ++index)
++			if(address[index] > 0xFF)
++				valid = false;
++		if(valid)
++			for(DWORD index = 0; index < 6; ++index)
++				acMACAddress[index] = static_cast<unsigned char>(address[index]);
+@@ -44,6 +50,6 @@
+-	// Release pbBuffer allocated by above function
+-	dwStatus = NetApiBufferFree(pbBuffer);
+-
+-	if( NERR_Success != dwStatus )
+-		DBO_FAIL("Fail free buffer NetAPI");
+-
++	if(pbBuffer != NULL)
++	{
++		dwStatus = NetApiBufferFree(pbBuffer);
++		if(NERR_Success != dwStatus)
++			DBO_FAIL("Fail free buffer NetAPI");
++	}
+@@ -51 +57 @@
+-}
+\ No newline at end of file
++}
+diff --git a/DboClient/Lib/NtlMovie/BandiVideo.h b/DboClient/Lib/NtlMovie/BandiVideo.h
+--- a/DboClient/Lib/NtlMovie/BandiVideo.h
++++ b/DboClient/Lib/NtlMovie/BandiVideo.h
+@@ -14,0 +15,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++#include "Video21Bridge/Video21Integration.h"
++#endif // OPENDBO_VIDEO21
+@@ -271,0 +275,13 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	HRESULT InitLibrary(LPCTSTR szDllPathName)
++	{
++		UNREFERENCED_PARAMETER(szDllPathName);
++		if(m_pCreateBandiVideo || m_pBVL)return BVERR_ALREADY_CREATED;
++		HRESULT hr=opendbo_bandi_adapter::ConfigureInstalledVideo21Policy();
++		if(FAILED(hr))return hr;
++		m_pCreateBandiVideo=&opendbo_bandi_adapter::CreateLegacyVideo21;
++		hr=CreateBandiVideo(m_pBVL);
++		if(FAILED(hr))m_pCreateBandiVideo=NULL;
++		return hr;
++	}
++#else // OPENDBO_VIDEO21
+@@ -311,0 +328 @@
++#endif // OPENDBO_VIDEO21
+@@ -314,0 +332,10 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	void DestroyLibrary()
++	{
++		if(m_pBVL && FAILED(m_pBVL->Release()))return;
++		m_pBVL=NULL;
++		m_pCreateBandiVideo=NULL;
++		// The bridge owns the actual SDK2 module. This is never a fake HMODULE.
++		m_hDll=NULL;
++	}
++#else // OPENDBO_VIDEO21
+@@ -323,0 +351 @@
++#endif // OPENDBO_VIDEO21
+@@ -329,0 +358,4 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	BOOL IsCurrentEof(WPARAM instance,LPARAM generation){return opendbo_bandi_adapter::IsCurrentVideo21Eof(m_pBVL,instance,generation)?TRUE:FALSE;}
++	HRESULT BeforeVideo21Reset(){return m_pBVL?opendbo_bandi_adapter::BeforeVideo21DeviceReset(m_pBVL):S_OK;}
++#endif // OPENDBO_VIDEO21
+@@ -361,0 +394,11 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	virtual	HRESULT	Create(HWND	hWnd, LPVOID context=NULL, BVL_CONTEXT_TYPE contextType=BVL_CONTEXT_DIRECTX9)
++	{
++		if(!m_pBVL){
++			HRESULT hr=CreateBandiVideo(m_pBVL);
++			if(FAILED(hr))return hr;
++			if(!m_pBVL)return E_UNEXPECTED;
++		}
++		return m_pBVL->Create(hWnd,context,contextType);
++	}
++#else // OPENDBO_VIDEO21
+@@ -372 +415,11 @@
+-
++#endif // OPENDBO_VIDEO21
++
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	virtual	HRESULT	Release() 
++	{
++		if(!m_pBVL)return S_OK;
++		HRESULT hr=m_pBVL->Release();
++		if(SUCCEEDED(hr))m_pBVL=NULL;
++		return hr;
++	}
++#else // OPENDBO_VIDEO21
+@@ -380,0 +434 @@
++#endif // OPENDBO_VIDEO21
+diff --git a/DboClient/Lib/NtlMovie/NtlMovie.cpp b/DboClient/Lib/NtlMovie/NtlMovie.cpp
+--- a/DboClient/Lib/NtlMovie/NtlMovie.cpp
++++ b/DboClient/Lib/NtlMovie/NtlMovie.cpp
+@@ -6,0 +7,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++#include "Video21Bridge/Video21Integration.h"
++#endif // OPENDBO_VIDEO21
+@@ -85,0 +89,8 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++void CNtlMovie::Delete( void )
++{
++	if(m_pRenderTexture){((LPDIRECT3DTEXTURE9)m_pRenderTexture)->Release();m_pRenderTexture=NULL;}
++	if(m_pBVL){if(FAILED(m_pBVL->Release()))return;m_pBVL=NULL;}
++	m_pCreateBandiVideo=NULL;
++}
++#else // OPENDBO_VIDEO21
+@@ -95,0 +107 @@
++#endif // OPENDBO_VIDEO21
+@@ -296,0 +309,14 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++int CNtlMovie::DeviceRestoreCallback( void )
++{
++	if(m_pBVL){
++		if(FAILED(opendbo_bandi_adapter::AfterVideo21DeviceReset(m_pBVL)))return 0;
++		if(!m_strFileName.empty()){
++			if(FAILED(m_pBVL->OpenAsync(m_strFileName.c_str(),BVL_OPEN_OPT_NONE,BVLPF_X8R8G8B8,BVL_AUDIO_DEVICE_DSOUND)))return 0;
++			if(FAILED(m_pBVL->SeekAsync(m_sVideoInfo.CurrentPlayTime)))return 0;
++			if(FAILED(m_pBVL->PlayAsync(m_bRepeat)))return 0;
++		}
++	}
++	m_bReset=false;return 1;
++}
++#else // OPENDBO_VIDEO21
+@@ -312 +338,15 @@
+-
++#endif // OPENDBO_VIDEO21
++
++#if defined(_WIN64) // OPENDBO_VIDEO21
++int CNtlMovie::DeviceReleaseCallback( void )
++{
++	m_bReset=true;
++	if(m_pRenderTexture){((LPDIRECT3DTEXTURE9)m_pRenderTexture)->Release();m_pRenderTexture=NULL;}
++	if(m_pBVL){
++		m_pBVL->GetVideoInfo(m_sVideoInfo);
++		if(FAILED(m_pBVL->Close()))return 0;
++		if(FAILED(opendbo_bandi_adapter::BeforeVideo21DeviceReset(m_pBVL)))return 0;
++	}
++	return 1;
++}
++#else // OPENDBO_VIDEO21
+@@ -333 +373,44 @@
+-
++#endif // OPENDBO_VIDEO21
++
++#if defined(_WIN64) // OPENDBO_VIDEO21
++bool CNtlMovie::UpdateRenderTexture( void )
++{
++	BVLVideoInfo sBandiInfo;
++	if(FAILED(m_pBVL->GetVideoInfo(sBandiInfo)))return false;
++	if(!m_pBVL->CheckFrame())return true;
++	IDirect3DTexture9* pRenderTexture=NULL;
++	if(m_pBVL->GetLastFrame((void**)&pRenderTexture)!=S_OK || !pRenderTexture)return true;
++	opendbo_bandi_adapter::Video21FrameLease<IBandiVideo> lease(m_pBVL,pRenderTexture);
++	LPDIRECT3DDEVICE9 pD3DDevice=(LPDIRECT3DDEVICE9)RwD3D9GetCurrentD3DDevice();
++	if(!pD3DDevice)return false;
++	if(!m_pRenderTexture){
++		if(FAILED(pD3DDevice->CreateTexture(sBandiInfo.width,sBandiInfo.height,1,D3DUSAGE_RENDERTARGET,D3DFMT_X8R8G8B8,D3DPOOL_DEFAULT,(LPDIRECT3DTEXTURE9*)&m_pRenderTexture,NULL)) || !m_pRenderTexture)return false;
++	}
++	struct sVERTEX{float x,y,z,w,u,v;};
++	sVERTEX sVertex[4]={{0.f,0.f,0.f,1.f,0.f,0.f},{0.f,(float)sBandiInfo.height,0.f,1.f,0.f,1.f},{(float)sBandiInfo.width,0.f,0.f,1.f,1.f,0.f},{(float)sBandiInfo.width,(float)sBandiInfo.height,0.f,1.f,1.f,1.f}};
++	opendbo_bandi_adapter::Video21ComReference<IDirect3DSurface9> oldSurface,targetSurface;
++	opendbo_bandi_adapter::Video21ComReference<IDirect3DBaseTexture9> oldTexture;
++	D3DVIEWPORT9 oldViewport;
++	if(FAILED(pD3DDevice->GetRenderTarget(0,&oldSurface.pointer)) || !oldSurface.pointer)return false;
++	if(FAILED(((LPDIRECT3DTEXTURE9)m_pRenderTexture)->GetSurfaceLevel(0,&targetSurface.pointer)) || !targetSurface.pointer)return false;
++	if(FAILED(pD3DDevice->GetTexture(0,&oldTexture.pointer)))return false;
++	if(FAILED(pD3DDevice->GetViewport(&oldViewport)))return false;
++	struct RestoreState{
++		LPDIRECT3DDEVICE9 device;IDirect3DSurface9* surface;IDirect3DBaseTexture9* texture;D3DVIEWPORT9 viewport;bool done;
++		HRESULT Restore(){
++			done=true;HRESULT result=device->SetTexture(0,texture);
++			HRESULT hr=device->SetRenderTarget(0,surface);if(SUCCEEDED(result)&&FAILED(hr))result=hr;
++			hr=device->SetViewport(&viewport);if(SUCCEEDED(result)&&FAILED(hr))result=hr;return result;
++		}
++		~RestoreState(){if(!done)Restore();}
++	} restore={pD3DDevice,oldSurface.pointer,oldTexture.pointer,oldViewport,false};
++	if(FAILED(pD3DDevice->SetRenderTarget(0,targetSurface.pointer)))return false;
++	if(FAILED(pD3DDevice->Clear(0,NULL,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,0,1.f,0)))return false;
++	if(FAILED(pD3DDevice->SetTexture(0,pRenderTexture)))return false;
++	if(FAILED(pD3DDevice->SetIndices(NULL)))return false;
++	if(FAILED(pD3DDevice->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1)))return false;
++	HRESULT drawn=pD3DDevice->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,sVertex,sizeof(sVERTEX));
++	HRESULT restored=restore.Restore();
++	return SUCCEEDED(drawn)&&SUCCEEDED(restored);
++}
++#else // OPENDBO_VIDEO21
+@@ -414,0 +498 @@
++#endif // OPENDBO_VIDEO21
+diff --git a/DboClient/Lib/NtlMovie/NtlMovie.vcxproj b/DboClient/Lib/NtlMovie/NtlMovie.vcxproj
+--- a/DboClient/Lib/NtlMovie/NtlMovie.vcxproj
++++ b/DboClient/Lib/NtlMovie/NtlMovie.vcxproj
+@@ -128,0 +129,11 @@
++  <ItemGroup>
++    <ClCompile Include="Video21Bridge\Backend21.cpp"><ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild><PrecompiledHeader Condition="'$(Platform)'=='x64'">NotUsing</PrecompiledHeader><LanguageStandard Condition="'$(Platform)'=='x64'">stdcpp17</LanguageStandard></ClCompile>
++    <ClCompile Include="Video21Bridge\LegacyVideo21Adapter.cpp"><ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild><PrecompiledHeader Condition="'$(Platform)'=='x64'">NotUsing</PrecompiledHeader><LanguageStandard Condition="'$(Platform)'=='x64'">stdcpp17</LanguageStandard></ClCompile>
++    <ClCompile Include="Video21Bridge\Sound\Sdk2Sound.cpp"><ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild><PrecompiledHeader Condition="'$(Platform)'=='x64'">NotUsing</PrecompiledHeader><LanguageStandard Condition="'$(Platform)'=='x64'">stdcpp17</LanguageStandard></ClCompile>
++    <ClCompile Include="Video21Bridge\Video21Integration.cpp"><ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild><PrecompiledHeader Condition="'$(Platform)'=='x64'">NotUsing</PrecompiledHeader><LanguageStandard Condition="'$(Platform)'=='x64'">stdcpp17</LanguageStandard></ClCompile>
++    <ClInclude Include="Video21Bridge\Backend21.h" />
++    <ClInclude Include="Video21Bridge\LegacyVideo21Adapter.h" />
++    <ClInclude Include="Video21Bridge\Sdk21Native.h" />
++    <ClInclude Include="Video21Bridge\Sound\Sdk2SoundFactory.h" />
++    <ClInclude Include="Video21Bridge\Video21Integration.h" />
++  </ItemGroup>
+diff --git a/DboClient/Lib/NtlMovie/NtlMovieManager.cpp b/DboClient/Lib/NtlMovie/NtlMovieManager.cpp
+--- a/DboClient/Lib/NtlMovie/NtlMovieManager.cpp
++++ b/DboClient/Lib/NtlMovie/NtlMovieManager.cpp
+@@ -3,0 +4,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++#include "Video21Bridge/Video21Integration.h"
++#endif // OPENDBO_VIDEO21
+@@ -31,0 +35,5 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++	if(FAILED(opendbo_bandi_adapter::ConfigureInstalledVideo21Policy()))return false;
++	s_hMovieDll=NULL;
++	s_pCreateBandiVideo=&opendbo_bandi_adapter::CreateLegacyVideo21;
++#else // OPENDBO_VIDEO21
+@@ -53,0 +62 @@
++#endif // OPENDBO_VIDEO21
+@@ -62,0 +72,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++		if(s_hMovieDll)FreeLibrary(s_hMovieDll);
++#else // OPENDBO_VIDEO21
+@@ -63,0 +76 @@
++#endif // OPENDBO_VIDEO21
+@@ -80,0 +94,3 @@
++#if defined(_WIN64) // OPENDBO_VIDEO21
++		if(s_hMovieDll)FreeLibrary(s_hMovieDll);
++#else // OPENDBO_VIDEO21
+@@ -81,0 +98 @@
++#endif // OPENDBO_VIDEO21
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.cpp b/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.cpp
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.cpp
+@@ -0,0 +1,221 @@
++#define NOMINMAX
++#include "Backend21.h"
++#include "Sdk21Native.h"
++#include "Sound/Sdk2SoundFactory.h"
++#include <bcrypt.h>
++#include <algorithm>
++#include <atomic>
++#include <limits>
++#include <mutex>
++#include <new>
++#pragma comment(lib,"bcrypt.lib")
++
++namespace opendbo_bandi_adapter {
++namespace sdk = opendbo_bandi_sdk21;
++namespace {
++std::mutex policyMutex;
++ModulePolicy defaultPolicy;
++bool configured=false;
++std::atomic<unsigned> liveDecoders{0};
++HRESULT WinError(){DWORD e=GetLastError();return HRESULT_FROM_WIN32(e?e:ERROR_GEN_FAILURE);}
++bool ValidPolicy(const ModulePolicy& p){
++    if(p.absoluteDll.size()<4 || p.maxFrameBytes<4 || p.maxFrameBytes>static_cast<std::size_t>(INT_MAX))return false;
++    DWORD n=GetFullPathNameW(p.absoluteDll.c_str(),0,nullptr,nullptr);
++    if(!n)return false;
++    std::vector<wchar_t> full(n);
++    if(!GetFullPathNameW(p.absoluteDll.c_str(),n,full.data(),nullptr))return false;
++    if(_wcsicmp(full.data(),p.absoluteDll.c_str())!=0)return false;
++    auto slash=p.absoluteDll.find_last_of(L"\\/");
++    if(slash==std::wstring::npos || _wcsicmp(p.absoluteDll.c_str()+slash+1,L"bdvid64.dll")!=0)return false;
++    return std::any_of(p.sha256.begin(),p.sha256.end(),[](unsigned char b){return b!=0;});
++}
++HRESULT HashFile(HANDLE file,std::array<unsigned char,32>& out){
++    BCRYPT_ALG_HANDLE alg=nullptr;BCRYPT_HASH_HANDLE hash=nullptr;
++    DWORD objectBytes=0,got=0;std::vector<unsigned char> object;
++    NTSTATUS status=BCryptOpenAlgorithmProvider(&alg,BCRYPT_SHA256_ALGORITHM,nullptr,0);
++    if(status<0)return HRESULT_FROM_NT(status);
++    status=BCryptGetProperty(alg,BCRYPT_OBJECT_LENGTH,reinterpret_cast<PUCHAR>(&objectBytes),sizeof(objectBytes),&got,0);
++    if(status>=0){try{object.resize(objectBytes);}catch(...){BCryptCloseAlgorithmProvider(alg,0);return E_OUTOFMEMORY;}status=BCryptCreateHash(alg,&hash,object.data(),objectBytes,nullptr,0,0);}
++    HRESULT hr=status<0?HRESULT_FROM_NT(status):S_OK;
++    unsigned char block[65536];
++    while(SUCCEEDED(hr)){
++        DWORD bytes=0;
++        if(!ReadFile(file,block,sizeof(block),&bytes,nullptr)){hr=WinError();break;}
++        if(!bytes)break;
++        status=BCryptHashData(hash,block,bytes,0);if(status<0)hr=HRESULT_FROM_NT(status);
++    }
++    if(SUCCEEDED(hr)){status=BCryptFinishHash(hash,out.data(),static_cast<ULONG>(out.size()),0);if(status<0)hr=HRESULT_FROM_NT(status);}
++    if(hash)BCryptDestroyHash(hash);
++    BCryptCloseAlgorithmProvider(alg,0);return hr;
++}
++class Reader final : public sdk::IBandiVideoFileReader {
++    std::atomic<ULONG> refs_{1};
++    HANDLE file_=INVALID_HANDLE_VALUE;
++    std::shared_ptr<SourceOps> source_;
++public:
++    void Bind(std::shared_ptr<SourceOps> s){Close();source_=std::move(s);}
++    void Unbind(){Close();source_.reset();}
++    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID id,void** out) override{
++        if(!out)return E_POINTER;*out=nullptr;
++        if(id!=IID_IUnknown)return E_NOINTERFACE;
++        *out=static_cast<sdk::IBandiVideoFileReader*>(this);AddRef();return S_OK;
++    }
++    ULONG STDMETHODCALLTYPE AddRef() override{return ++refs_;}
++    ULONG STDMETHODCALLTYPE Release() override{ULONG n=--refs_;if(!n)delete this;return n;}
++    HRESULT Open(LPCWSTR path) override{
++        Close();
++        if(source_){
++            if(!source_->read||!source_->seek||!source_->position||!source_->length)return E_INVALIDARG;
++            try{return source_->seek(0)==0?S_OK:E_FAIL;}catch(...){return E_UNEXPECTED;}
++        }
++        if(!path||!*path)return E_INVALIDARG;
++        file_=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
++        return file_==INVALID_HANDLE_VALUE?WinError():S_OK;
++    }
++    void Close() override{if(file_!=INVALID_HANDLE_VALUE){CloseHandle(file_);file_=INVALID_HANDLE_VALUE;}}
++    INT Read(BYTE* out,INT count) override{
++        if(count<0||(!out&&count))return -1;
++        if(source_){try{int n=source_->read(out,count);return n>=0&&n<=count?n:-1;}catch(...){return -1;}}
++        if(file_==INVALID_HANDLE_VALUE)return -1;
++        DWORD n=0;return ReadFile(file_,out,static_cast<DWORD>(count),&n,nullptr)?static_cast<INT>(n):-1;
++    }
++    INT64 SetPosition(INT64 value) override{
++        if(value<0)return -1;if(source_){try{return source_->seek(value);}catch(...){return -1;}}
++        if(file_==INVALID_HANDLE_VALUE)return -1;
++        LARGE_INTEGER in{},out{};in.QuadPart=value;
++        return SetFilePointerEx(file_,in,&out,FILE_BEGIN)?out.QuadPart:-1;
++    }
++    INT64 GetPosition() override{
++        if(source_){try{return source_->position();}catch(...){return -1;}}if(file_==INVALID_HANDLE_VALUE)return -1;
++        LARGE_INTEGER zero{},out{};return SetFilePointerEx(file_,zero,&out,FILE_CURRENT)?out.QuadPart:-1;
++    }
++    INT64 GetFileSize() override{
++        if(source_){try{return source_->length();}catch(...){return -1;}}if(file_==INVALID_HANDLE_VALUE)return -1;
++        LARGE_INTEGER size{};return GetFileSizeEx(file_,&size)?size.QuadPart:-1;
++    }
++    ~Reader(){Close();}
++};
++}
++HRESULT ConfigureDefaultPolicy(const ModulePolicy& p){
++    try{
++    if(!ValidPolicy(p))return E_INVALIDARG;
++    std::lock_guard<std::mutex> lock(policyMutex);
++    if(configured&&defaultPolicy.absoluteDll==p.absoluteDll&&defaultPolicy.sha256==p.sha256&&defaultPolicy.maxFrameBytes==p.maxFrameBytes)return S_OK;
++    if(liveDecoders.load())return HRESULT_FROM_WIN32(ERROR_BUSY);
++    defaultPolicy=p;configured=true;return S_OK;
++    }catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++}
++HRESULT ReadDefaultPolicy(ModulePolicy& p){
++    try{
++    std::lock_guard<std::mutex> lock(policyMutex);
++    if(!configured)return CO_E_NOTINITIALIZED;p=defaultPolicy;return S_OK;
++    }catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++}
++struct Decoder21::Impl {
++    HMODULE module=nullptr;
++    sdk::IBandiVideo2* video=nullptr;
++    Reader* reader=nullptr;
++    IAdapterSound* sound=nullptr;
++    ModulePolicy policy;
++    bool verified=false,live=false;
++    ~Impl(){
++        if(video){video->Close();video->Release();video=nullptr;}
++        if(sound){sound->Close();sound->Release();sound=nullptr;}
++        if(reader){reader->Unbind();reader->Release();reader=nullptr;}
++        if(module)FreeLibrary(module);
++        if(live)--liveDecoders;
++    }
++};
++Decoder21::Decoder21():impl_(new Impl){}
++Decoder21::~Decoder21()=default;
++HRESULT Decoder21::Initialize(const ModulePolicy& policy,HWND window){
++    if(impl_->video)return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
++    try{
++    if(!ValidPolicy(policy))return E_INVALIDARG;
++    // Keep partial attempts local: every failure releases the reader/sound/
++    // module and a later Initialize cannot overwrite a leaked partial state.
++    auto next=std::make_unique<Impl>();
++    HANDLE held=CreateFileW(policy.absoluteDll.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
++    if(held==INVALID_HANDLE_VALUE)return WinError();
++    std::array<unsigned char,32> actual{};HRESULT hr=HashFile(held,actual);
++    if(SUCCEEDED(hr)&&actual!=policy.sha256)hr=TRUST_E_BAD_DIGEST;
++    if(SUCCEEDED(hr)){
++        next->module=LoadLibraryExW(policy.absoluteDll.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_SYSTEM32);
++        if(!next->module)hr=WinError();
++    }
++    CloseHandle(held);
++    if(FAILED(hr))return hr;
++    auto create=reinterpret_cast<sdk::LPCREATEBANDIVIDEO2>(GetProcAddress(next->module,"CreateBandiVideo2"));
++    if(!create)return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
++    next->reader=new(std::nothrow) Reader;
++    if(!next->reader)return E_OUTOFMEMORY;
++    hr=CreateAdapterSound(window,&next->sound);if(FAILED(hr))return hr;
++    hr=create(BVL_VERSION,reinterpret_cast<void**>(&next->video),next->reader,next->sound);
++    if(FAILED(hr))return hr;
++    if(!next->video)return E_UNEXPECTED;
++    next->policy=policy;next->live=true;++liveDecoders;impl_=std::move(next);return hr;
++    }catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++}
++HRESULT Decoder21::Verify(LPCSTR id,LPCSTR key){
++    if(!impl_->video)return CO_E_NOTINITIALIZED;
++    HRESULT hr=impl_->video->Verify(id,key);impl_->verified=(hr==S_OK);return hr;
++}
++UINT Decoder21::Version()const{return impl_->video?static_cast<UINT>(impl_->video->GetVersion()):0;}
++HRESULT Decoder21::Open(const std::wstring& path,std::shared_ptr<SourceOps> source,bool silent,bool async){
++    if(!impl_->video)return CO_E_NOTINITIALIZED;
++    if(!impl_->verified)return E_ACCESSDENIED;
++    DecoderStatus status{};HRESULT hr=Status(status);if(FAILED(hr))return hr;
++    if(status!=DecoderStatus::closed){hr=impl_->video->Close();if(FAILED(hr))return hr;}
++    impl_->sound->Close();hr=impl_->sound->SetSilentMode(silent?TRUE:FALSE);if(FAILED(hr))return hr;
++    impl_->reader->Bind(std::move(source));
++    return impl_->video->Open(path.c_str(),async?TRUE:FALSE);
++}
++HRESULT Decoder21::Close(){
++    if(!impl_->video)return CO_E_NOTINITIALIZED;
++    DecoderStatus status{};HRESULT hr=Status(status);if(FAILED(hr))return hr;
++    if(status!=DecoderStatus::closed)hr=impl_->video->Close();
++    if(SUCCEEDED(hr)){impl_->sound->Close();impl_->reader->Unbind();}return hr;
++}
++HRESULT Decoder21::Play(){return impl_->video?impl_->video->Play():CO_E_NOTINITIALIZED;}
++HRESULT Decoder21::Stop(){return impl_->video?impl_->video->Stop():CO_E_NOTINITIALIZED;}
++HRESULT Decoder21::Pause(bool pause){return impl_->video?impl_->video->Pause(pause?TRUE:FALSE):CO_E_NOTINITIALIZED;}
++HRESULT Decoder21::Seek(std::int64_t time){if(time<0)return E_INVALIDARG;return impl_->video?impl_->video->Seek(time,sdk::BVL_SEEK_TIME):CO_E_NOTINITIALIZED;}
++HRESULT Decoder21::SetVolume(unsigned int volume){if(volume>255)return E_INVALIDARG;return impl_->video?impl_->video->SetVolume(static_cast<INT>(volume)):CO_E_NOTINITIALIZED;}
++HRESULT Decoder21::Info(VideoInfo21& out){
++    if(!impl_->video)return CO_E_NOTINITIALIZED;
++    sdk::BVL_VIDEO_INFO in{};HRESULT hr=impl_->video->GetVideoInfo(in);if(FAILED(hr))return hr;
++    if(in.width<=0||in.height<=0||in.fps_rate<=0||in.fps_scale<=0||in.total_time<0||in.total_frames<0)return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
++    out={in.width,in.height,in.fps_rate,in.fps_scale,in.samplerate,in.channels,in.total_time,in.total_frames};return hr;
++}
++HRESULT Decoder21::Status(DecoderStatus& out){
++    if(!impl_->video)return CO_E_NOTINITIALIZED;
++    sdk::BVL_STATUS status{};HRESULT hr=impl_->video->GetStatus(status);if(FAILED(hr))return hr;
++    switch(status){
++    case sdk::BVL_STATUS_ERROR:out=DecoderStatus::error;break;
++    case sdk::BVL_STATUS_CLOSED:out=DecoderStatus::closed;break;
++    case sdk::BVL_STATUS_OPENING:out=DecoderStatus::opening;break;
++    case sdk::BVL_STATUS_READY:out=DecoderStatus::ready;break;
++    case sdk::BVL_STATUS_PLAYING:out=DecoderStatus::playing;break;
++    case sdk::BVL_STATUS_PAUSED:out=DecoderStatus::paused;break;
++    case sdk::BVL_STATUS_PLAYEND:out=DecoderStatus::ended;break;
++    default:return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
++    }return hr;
++}
++bool Decoder21::IsNextFrame(){return impl_->video&&impl_->video->IsNextFrame()!=FALSE;}
++HRESULT Decoder21::Frame(CpuFrame21& out,bool canSkip){
++    VideoInfo21 info{};HRESULT hr=Info(info);if(FAILED(hr))return hr;
++    std::size_t width=static_cast<std::size_t>(info.width),height=static_cast<std::size_t>(info.height);
++    if(width>static_cast<std::size_t>(INT_MAX)/4)return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
++    std::size_t pitch=width*4;
++    if(height>impl_->policy.maxFrameBytes/pitch || height>static_cast<std::size_t>(INT_MAX)/pitch)return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
++    CpuFrame21 next;next.width=info.width;next.height=info.height;next.pitch=static_cast<int>(pitch);
++    try{next.xrgb.resize(pitch*height);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}
++    sdk::BVL_FRAME frame{};frame.frame_buf=next.xrgb.data();frame.frame_buf_size=static_cast<INT>(next.xrgb.size());
++    frame.pitch=next.pitch;frame.width=next.width;frame.height=next.height;frame.pixel_format=sdk::BVLPF_X8R8G8B8;
++    hr=impl_->video->GetFrame(frame,canSkip?TRUE:FALSE);
++    if(hr!=S_OK)return hr;
++    if(frame.frame_buf!=next.xrgb.data()||frame.width!=next.width||frame.height!=next.height||frame.pitch!=next.pitch||frame.frame_buf_size!=static_cast<INT>(next.xrgb.size())||frame.pixel_format!=sdk::BVLPF_X8R8G8B8||frame.frame_time<0||frame.frame_number<0)return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
++    next.time100ns=frame.frame_time;next.number=frame.frame_number;out=std::move(next);return hr;
++}
++HRESULT Decoder21::SoundClock(std::int64_t& out){return impl_->sound?impl_->sound->GetTime(out):CO_E_NOTINITIALIZED;}
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.h b/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.h
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Backend21.h
+@@ -0,0 +1,60 @@
++#pragma once
++// Neutral boundary: this header must never include either vendor video header.
++#include <windows.h>
++#include <array>
++#include <cstdint>
++#include <functional>
++#include <memory>
++#include <string>
++#include <vector>
++
++namespace opendbo_bandi_adapter {
++struct ModulePolicy {
++    std::wstring absoluteDll;
++    std::array<unsigned char,32> sha256{};
++    std::size_t maxFrameBytes = 256u*1024u*1024u;
++};
++HRESULT ConfigureDefaultPolicy(const ModulePolicy&);
++HRESULT ReadDefaultPolicy(ModulePolicy&);
++struct SourceOps {
++    std::function<int(unsigned char*,int)> read;
++    std::function<std::int64_t(std::int64_t)> seek;
++    std::function<std::int64_t()> position;
++    std::function<std::int64_t()> length;
++};
++enum class DecoderStatus { error,closed,opening,ready,playing,paused,ended };
++struct VideoInfo21 {
++    int width=0,height=0,fpsRate=0,fpsScale=0,sampleRate=0,channels=0;
++    std::int64_t duration100ns=0,totalFrames=0;
++};
++struct CpuFrame21 {
++    int width=0,height=0,pitch=0;
++    std::int64_t time100ns=0,number=0;
++    std::vector<unsigned char> xrgb;
++};
++class Decoder21 final {
++public:
++    Decoder21();
++    ~Decoder21();
++    HRESULT Initialize(const ModulePolicy&,HWND);
++    HRESULT Verify(LPCSTR,LPCSTR);
++    UINT Version() const;
++    HRESULT Open(const std::wstring&,std::shared_ptr<SourceOps>,bool silent,bool async);
++    HRESULT Close();
++    HRESULT Play();
++    HRESULT Stop();
++    HRESULT Pause(bool);
++    HRESULT Seek(std::int64_t);
++    HRESULT SetVolume(unsigned int);
++    HRESULT Info(VideoInfo21&);
++    HRESULT Status(DecoderStatus&);
++    bool IsNextFrame();
++    HRESULT Frame(CpuFrame21&,bool canSkip);
++    HRESULT SoundClock(std::int64_t&);
++private:
++    Decoder21(const Decoder21&)=delete;
++    Decoder21& operator=(const Decoder21&)=delete;
++    struct Impl;
++    std::unique_ptr<Impl> impl_;
++};
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.cpp b/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.cpp
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.cpp
+@@ -0,0 +1,400 @@
++#define NOMINMAX
++#ifndef OPENDBO_BANDI_V1_HEADER
++#define OPENDBO_BANDI_V1_HEADER "../BandiVideo.h"
++#endif
++#include <windows.h>
++#include <tchar.h>
++#include <cassert>
++#include <d3d9.h>
++#include "LegacyVideo21Adapter.h"
++#include "Backend21.h"
++#include <algorithm>
++#include <atomic>
++#include <chrono>
++#include <cmath>
++#include <cstring>
++#include <condition_variable>
++#include <deque>
++#include <functional>
++#include <future>
++#include <limits>
++#include <mutex>
++#include <thread>
++#include <unordered_map>
++#pragma comment(lib,"gdi32.lib")
++
++namespace opendbo_bandi_adapter {
++namespace {
++constexpr std::size_t MaxCommands=64,MaxFrameSlots=4;
++constexpr double TicksPerSecond=10000000.0;
++std::atomic<std::uint64_t> nextNotification{1};
++std::uint64_t NewNotification(){return nextNotification.fetch_add(1);}
++HRESULT SecondsToTicks(double value,std::int64_t& ticks){
++    if(!std::isfinite(value)||value<0)return E_INVALIDARG;
++    long double n=static_cast<long double>(value)*10000000.0L;
++    // MSVC long double is 64-bit double: converting INT64_MAX rounds UP to
++    // 2^63, so compare against the exclusive bound before the integer cast.
++    if(n>=9223372036854775808.0L)return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
++    ticks=static_cast<std::int64_t>(n);return S_OK;
++}
++std::wstring Wide(const char* p){
++    if(!p)return {};
++    int n=MultiByteToWideChar(CP_ACP,0,p,-1,nullptr,0);if(!n)return {};
++    std::vector<wchar_t> temp(n);if(!MultiByteToWideChar(CP_ACP,0,p,-1,temp.data(),n))return {};
++    return std::wstring(temp.data());
++}
++struct MemoryFrame final : IBVLMemoryBuffer {
++    HBITMAP bitmap=nullptr;
++    unsigned char* pixels=nullptr;
++    HBITMAP GetHBitmap()const override{return bitmap;}
++    BYTE* GetRasterBuffer()const override{return pixels;}
++    ~MemoryFrame(){if(bitmap)DeleteObject(bitmap);}
++};
++struct FrameSlot {
++    IDirect3DTexture9* texture=nullptr;
++    std::unique_ptr<MemoryFrame> memory;
++    unsigned borrows=0;
++    int width=0,height=0,pitch=0;
++    BVL_PIXEL_FORMAT format=BVLPF_X8R8G8B8;
++    unsigned alpha=255;
++    std::uint64_t serial=0;
++    bool retired=false;
++    void* Key()const{return memory?static_cast<IBVLMemoryBuffer*>(memory.get()):static_cast<void*>(texture);}
++    ~FrameSlot(){if(texture)texture->Release();}
++};
++bool ValidFormat(BVL_PIXEL_FORMAT f){return f==BVLPF_X8R8G8B8||f==BVLPF_A8R8G8B8||f==BVLPF_R5G6B5;}
++bool ValidOption(BVL_OPEN_OPT o){return o==BVL_OPEN_OPT_NONE||o==BVL_OPEN_OPT_AUTOPLAY||o==BVL_OPEN_OPT_AUTOPLAY_REPEAT;}
++}
++struct LegacyVideo21Adapter::Impl {
++    struct Task {std::uint64_t epoch;std::function<HRESULT(Decoder21&)> run;std::shared_ptr<std::promise<HRESULT>> completion;bool recordResult;};
++    LegacyVideo21Adapter* owner;
++    std::mutex queueMutex,stateMutex,frameMutex;
++    std::condition_variable wake;
++    std::deque<Task> commands;
++    std::thread worker;
++    std::atomic<bool> terminating{false},created{false},opening{false};
++    std::atomic<std::uint64_t> epoch{1},notification{NewNotification()};
++    HWND window=nullptr;
++    DWORD renderThread=0;
++    IDirect3DDevice9* device=nullptr;
++    BVL_CONTEXT_TYPE context=BVL_CONTEXT_DIRECTX9;
++    BVL_PIXEL_FORMAT requestedFormat=BVLPF_X8R8G8B8;
++    BVL_OPEN_OPT option=BVL_OPEN_OPT_NONE;
++    DecoderStatus status=DecoderStatus::closed;
++    VideoInfo21 info;
++    HRESULT lastResult=S_OK;
++    HRESULT openedResult=S_OK;
++    unsigned volume=255,alpha=255,decodeErrors=0;
++    bool repeat=false,eofPosted=false,openedPosted=false,eofConsumed=false,openedConsumed=false,reset=false;
++    std::uint64_t activeNotification=notification.load();
++    std::int64_t clockBase=0,clockAtBase=0,renderTime=0;
++    UINT eofMessage=0,openedMessage=0;
++    std::vector<std::unique_ptr<FrameSlot>> frames;
++    std::shared_ptr<CpuFrame21> lastFrame;
++    std::uint64_t frameSerial=0;
++
++    explicit Impl(LegacyVideo21Adapter* p):owner(p){}
++    ~Impl(){Shutdown();frames.clear();if(device)device->Release();}
++    void SaveResult(HRESULT hr){std::lock_guard<std::mutex> lock(stateMutex);lastResult=hr;}
++    HRESULT Enqueue(std::function<HRESULT(Decoder21&)> fn,bool async,std::uint64_t expected,
++                    std::function<void(std::uint64_t&)> admitted={},bool recordResult=true){
++        if(std::this_thread::get_id()==worker.get_id()&&!async)return RPC_E_CANTCALLOUT_ININPUTSYNCCALL;
++        try{
++        auto done=std::make_shared<std::promise<HRESULT>>();auto future=done->get_future();
++        {std::lock_guard<std::mutex> lock(queueMutex);
++            if(terminating.load()||!worker.joinable())return CO_E_NOTINITIALIZED;
++            if(commands.size()>=MaxCommands)return BVERR_ASYNCQUEUE_FULL;
++            // Allocate the queue node before changing cancellation/notification
++            // state: an allocation failure must not cancel the old operation.
++            commands.push_back({expected,std::move(fn),done,recordResult});
++            if(admitted)admitted(expected);
++            commands.back().epoch=expected;}
++        wake.notify_one();
++        if(async)return S_OK; // successful queue admission, not SDK completion
++        return future.get();
++        }catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++    }
++    HRESULT Send(std::function<HRESULT(Decoder21&)> fn,bool async=false,bool recordResult=true){
++        if(!created.load())return CO_E_NOTINITIALIZED;
++        return Enqueue(std::move(fn),async,epoch.load(),{},recordResult);
++    }
++    void RetireFrames(){
++        std::lock_guard<std::mutex> lock(frameMutex);
++        lastFrame.reset();
++        for(auto& p:frames)p->retired=true;
++        // Retire only. COM/GDI resources are recycled by Borrow on the owning
++        // render thread, never while a decoder/source callback admits a task.
++    }
++    bool HasBorrows(){std::lock_guard<std::mutex> lock(frameMutex);for(auto& p:frames)if(p->borrows)return true;return false;}
++    void Shutdown(){
++        if(!worker.joinable())return;
++        terminating.store(true);++epoch;notification.store(NewNotification());wake.notify_all();
++        if(worker.get_id()!=std::this_thread::get_id())worker.join();
++        created.store(false);
++    }
++    void Notify(bool terminal,std::uint64_t tag,HRESULT result=S_OK){
++        // Publish state BEFORE PostMessage: the owning UI may consume the
++        // notification immediately on another thread. Failed posts are retried
++        // only while this exact generation is still current.
++        {std::lock_guard<std::mutex> lock(stateMutex);
++            if(tag!=notification.load()||tag!=activeNotification)return;
++            bool& posted=terminal?eofPosted:openedPosted;
++            if(posted)return;
++            posted=true;
++            if(terminal)eofConsumed=false;else{openedConsumed=false;openedResult=result;}}
++        WPARAM value=terminal?reinterpret_cast<WPARAM>(owner):static_cast<WPARAM>(result);
++        if(!PostMessageW(window,terminal?eofMessage:openedMessage,value,static_cast<LPARAM>(tag))){
++            HRESULT error=HRESULT_FROM_WIN32(GetLastError());
++            std::lock_guard<std::mutex> lock(stateMutex);
++            if(tag==activeNotification&&tag==notification.load()){
++                (terminal?eofPosted:openedPosted)=false;lastResult=error;}}
++    }
++    void Poll(Decoder21& decoder){
++        DecoderStatus current{};HRESULT hr=decoder.Status(current);
++        if(FAILED(hr)){SaveResult(hr);return;}
++        {std::lock_guard<std::mutex> lock(stateMutex);status=current;}
++        if(current!=DecoderStatus::ended||decoder.IsNextFrame())return;
++        bool loop=false;std::uint64_t tag=0;
++        {std::lock_guard<std::mutex> lock(stateMutex);loop=repeat;tag=activeNotification;}
++        if(tag!=notification.load())return;
++        if(loop){
++            hr=decoder.Seek(0);if(SUCCEEDED(hr))hr=decoder.Play();
++            if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(stateMutex);clockBase=0;clockAtBase=0;renderTime=0;status=DecoderStatus::playing;eofPosted=false;}
++            SaveResult(hr);return;
++        }
++        Notify(true,tag);
++    }
++    void Main(){
++        Decoder21 decoder;
++        while(true){
++            Task task{};bool have=false;
++            {std::unique_lock<std::mutex> lock(queueMutex);
++                wake.wait_for(lock,std::chrono::milliseconds(5),[this]{return terminating.load()||!commands.empty();});
++                if(!commands.empty()){task=std::move(commands.front());commands.pop_front();have=true;}
++                else if(terminating.load())break;}
++            if(have){
++                HRESULT hr=E_ABORT;
++                if(!terminating.load()&&task.epoch==epoch.load()){
++                    try{hr=task.run(decoder);}catch(const std::bad_alloc&){hr=E_OUTOFMEMORY;}catch(...){hr=E_UNEXPECTED;}
++                    if(task.recordResult&&task.epoch==epoch.load())SaveResult(hr);
++                }
++                task.completion->set_value(hr);
++            }
++            if(created.load()&&!opening.load()&&!terminating.load())Poll(decoder);
++        }
++        decoder.Close();
++    }
++    HRESULT Start(const ModulePolicy& policy,HWND hwnd){
++        terminating.store(false);
++        window=hwnd;eofMessage=RegisterWindowMessageW(L"WM_BVNOTIFY_EOF");openedMessage=RegisterWindowMessageW(L"WM_BVNOTIFY_OPENED");
++        if(!eofMessage||!openedMessage)return HRESULT_FROM_WIN32(GetLastError());
++        try{worker=std::thread([this]{Main();});}catch(...){return E_OUTOFMEMORY;}
++        HRESULT hr=Enqueue([policy,hwnd](Decoder21& d){return d.Initialize(policy,hwnd);},false,epoch.load());
++        if(SUCCEEDED(hr))created.store(true);else Shutdown();return hr;
++    }
++    HRESULT DoOpen(std::wstring path,std::shared_ptr<SourceOps> source,BVL_OPEN_OPT opt,BVL_PIXEL_FORMAT format,BVL_AUDIO_DEVICE audio,bool async){
++        if(!ValidOption(opt)||!ValidFormat(format)||(audio!=BVL_AUDIO_DEVICE_NULL&&audio!=BVL_AUDIO_DEVICE_DSOUND))return E_INVALIDARG;
++        if(path.empty()&&!source)return E_INVALIDARG;
++        if(!created.load())return CO_E_NOTINITIALIZED;
++        auto admittedTag=std::make_shared<std::uint64_t>(0);
++        auto fn=[this,path,source,opt,format,audio,admittedTag](Decoder21& d){
++            const std::uint64_t tag=*admittedTag;
++            // This task already runs off the caller thread. Wait for the
++            // SDK's synchronous completion here; a second SDK async queue can
++            // reset the source after our following Seek has returned S_OK.
++            HRESULT hr=d.Open(source?L"<BandiVideoSource>":path,source,audio==BVL_AUDIO_DEVICE_NULL,false);
++            if(SUCCEEDED(hr)){
++                const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
++                while(true){
++                    if(tag!=epoch.load()||terminating.load()){d.Close();hr=E_ABORT;break;}
++                    DecoderStatus s{};hr=d.Status(s);if(FAILED(hr))break;
++                    if(s==DecoderStatus::ready||s==DecoderStatus::playing||s==DecoderStatus::paused)break;
++                    if(s!=DecoderStatus::opening){hr=E_FAIL;break;}
++                    if(std::chrono::steady_clock::now()>deadline){d.Close();hr=BVERR_TIMEOUT;break;}
++                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
++                }
++            }
++            VideoInfo21 next{};
++            if(SUCCEEDED(hr))hr=d.Info(next);
++            if(SUCCEEDED(hr))hr=d.SetVolume(volume);
++            if(SUCCEEDED(hr)&&opt!=BVL_OPEN_OPT_NONE)hr=d.Play();
++            if(tag==epoch.load()){
++                opening.store(false);
++                if(SUCCEEDED(hr)){
++                    {std::lock_guard<std::mutex> lock(stateMutex);info=next;requestedFormat=format;option=opt;repeat=(opt==BVL_OPEN_OPT_AUTOPLAY_REPEAT);status=opt==BVL_OPEN_OPT_NONE?DecoderStatus::ready:DecoderStatus::playing;clockBase=clockAtBase=renderTime=0;activeNotification=notification.load();eofPosted=false;openedPosted=false;eofConsumed=false;openedConsumed=false;decodeErrors=0;}
++                }
++                // SDK1 OPENED carries its completion HRESULT in WPARAM. The
++                // bridge-only generation cookie is carried in LPARAM.
++                {std::lock_guard<std::mutex> lock(stateMutex);activeNotification=notification.load();openedPosted=false;openedConsumed=false;}
++                Notify(false,notification.load(),hr);
++            }
++            return hr;
++        };
++        return Enqueue(std::move(fn),async,epoch.load(),[this,admittedTag](std::uint64_t& expected){
++            expected=++epoch;*admittedTag=expected;notification.store(NewNotification());opening.store(true);RetireFrames();
++        });
++    }
++    HRESULT DoPlay(BOOL looping,bool async){
++        if(!created.load())return CO_E_NOTINITIALIZED;
++        return Enqueue([this,looping](Decoder21& d){HRESULT hr=d.Play();if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(stateMutex);repeat=(looping!=FALSE);activeNotification=notification.load();eofPosted=false;eofConsumed=false;status=DecoderStatus::playing;}return hr;},async,epoch.load(),[this](std::uint64_t&){notification.store(NewNotification());});
++    }
++    HRESULT DoSeek(double seconds,bool async){
++        std::int64_t ticks=0;HRESULT hr=SecondsToTicks(seconds,ticks);if(FAILED(hr))return hr;
++        if(!created.load())return CO_E_NOTINITIALIZED;
++        return Enqueue([this,ticks](Decoder21& d){HRESULT hr=d.Seek(ticks);if(SUCCEEDED(hr)){std::int64_t clock=0;d.SoundClock(clock);std::lock_guard<std::mutex> lock(stateMutex);clockBase=ticks;clockAtBase=clock;renderTime=ticks;activeNotification=notification.load();eofPosted=false;eofConsumed=false;}return hr;},async,epoch.load(),[this](std::uint64_t&){notification.store(NewNotification());RetireFrames();});
++    }
++    HRESULT DoStop(bool close,bool async){
++        if(!created.load())return CO_E_NOTINITIALIZED;
++        return Enqueue([this,close](Decoder21& d){HRESULT hr=close?d.Close():d.Stop();if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(stateMutex);status=close?DecoderStatus::closed:DecoderStatus::ready;repeat=false;eofPosted=false;eofConsumed=false;openedPosted=false;openedConsumed=false;clockBase=clockAtBase=renderTime=0;activeNotification=notification.load();}return hr;},async,epoch.load(),[this](std::uint64_t& expected){expected=++epoch;notification.store(NewNotification());opening.store(false);RetireFrames();});
++    }
++    HRESULT Borrow(void** out){
++        if(!out)return E_POINTER;*out=nullptr;if(!created.load())return CO_E_NOTINITIALIZED;
++        const std::uint64_t generation=epoch.load();
++        if(context==BVL_CONTEXT_DIRECTX9&&GetCurrentThreadId()!=renderThread)return RPC_E_WRONG_THREAD;
++        if(opening.load())return S_FALSE;
++        {std::lock_guard<std::mutex> lock(frameMutex);if(reset)return D3DERR_DEVICELOST;}
++        auto frame=std::make_shared<CpuFrame21>();bool decoded=false;
++        HRESULT hr=Send([frame,&decoded](Decoder21& d){if(!d.IsNextFrame())return S_FALSE;HRESULT hr=d.Frame(*frame,true);decoded=(hr==S_OK);return hr;});
++        if(generation!=epoch.load())return E_ABORT;
++        if(FAILED(hr)){std::lock_guard<std::mutex> lock(stateMutex);++decodeErrors;return hr;}
++        std::lock_guard<std::mutex> lock(frameMutex);
++        if(generation!=epoch.load())return E_ABORT;
++        if(decoded){lastFrame=frame;++frameSerial;{std::lock_guard<std::mutex> state(stateMutex);renderTime=frame->time100ns;}}
++        if(!lastFrame)return S_FALSE;
++        FrameSlot* slot=nullptr;BVL_PIXEL_FORMAT format;unsigned useAlpha;
++        {std::lock_guard<std::mutex> state(stateMutex);format=requestedFormat;useAlpha=255;}
++        for(auto& p:frames)if(!p->retired&&p->serial==frameSerial&&p->format==format&&p->alpha==useAlpha){slot=p.get();break;}
++        if(!slot){
++            for(auto& p:frames)if(!p->borrows){slot=p.get();break;}
++            if(!slot){if(frames.size()>=MaxFrameSlots)return HRESULT_FROM_WIN32(ERROR_BUSY);frames.emplace_back(new FrameSlot);slot=frames.back().get();}
++            hr=Fill(*slot,*lastFrame,format,useAlpha);if(FAILED(hr))return hr;
++            slot->serial=frameSerial;slot->retired=false;
++        }
++        // A source callback or a driver callback can admit a replacement while
++        // Frame/upload is in progress. Never republish a cancelled generation.
++        // Already-returned leases remain valid until their normal return.
++        if(generation!=epoch.load()){lastFrame.reset();for(auto& p:frames)p->retired=true;return E_ABORT;}
++        if(slot->borrows==(std::numeric_limits<unsigned>::max)())return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
++        ++slot->borrows;if(slot->texture)slot->texture->AddRef();*out=slot->Key();return S_OK;
++    }
++    HRESULT Fill(FrameSlot& slot,const CpuFrame21& frame,BVL_PIXEL_FORMAT format,unsigned useAlpha){
++        // All decoding is SDK2 X8. Pixel selection below is explicit legacy
++        // output conversion, never an SDK2 enum cast or unsupported RGB24 decode.
++        if(frame.width<=0||frame.height<=0||frame.width>INT_MAX/4||frame.pitch<frame.width*4||
++            static_cast<std::size_t>(frame.height)>frame.xrgb.size()/static_cast<std::size_t>(frame.pitch))return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
++        int bpp=format==BVLPF_R5G6B5?2:4;
++        std::size_t row=static_cast<std::size_t>(frame.width)*bpp;
++        if(row>static_cast<std::size_t>(INT_MAX)-3)return E_INVALIDARG;
++        int pitch=static_cast<int>((row+3)&~std::size_t(3));
++        if(frame.height<=0||static_cast<std::size_t>(frame.height)>static_cast<std::size_t>(INT_MAX)/pitch)return E_INVALIDARG;
++        std::vector<unsigned char> pixels(static_cast<std::size_t>(pitch)*frame.height,0);
++        for(int y=0;y<frame.height;++y)for(int x=0;x<frame.width;++x){
++            const unsigned char* src=frame.xrgb.data()+static_cast<std::size_t>(y)*frame.pitch+x*4;
++            unsigned char* dst=pixels.data()+static_cast<std::size_t>(y)*pitch+x*bpp;
++            if(bpp==2){unsigned v=((src[2]>>3)<<11)|((src[1]>>2)<<5)|(src[0]>>3);dst[0]=static_cast<unsigned char>(v);dst[1]=static_cast<unsigned char>(v>>8);}
++            else{dst[0]=src[0];dst[1]=src[1];dst[2]=src[2];dst[3]=static_cast<unsigned char>(useAlpha);}
++        }
++        // Free-slot replacement is exception-safe and cannot overwrite an
++        // outstanding borrow. Destination only becomes visible after success.
++        auto next=std::make_unique<FrameSlot>();next->width=frame.width;next->height=frame.height;next->pitch=pitch;next->format=format;next->alpha=useAlpha;
++        if(context==BVL_CONTEXT_MEMORYBUFFER){
++            struct BitmapInfo {BITMAPINFOHEADER header;DWORD masks[3];} bmi{};
++            bmi.header.biSize=sizeof(BITMAPINFOHEADER);bmi.header.biWidth=frame.width;bmi.header.biHeight=-frame.height;bmi.header.biPlanes=1;bmi.header.biBitCount=static_cast<WORD>(bpp*8);
++            bmi.header.biCompression=bpp==2?BI_BITFIELDS:BI_RGB;bmi.masks[0]=0xF800;bmi.masks[1]=0x07E0;bmi.masks[2]=0x001F;
++            next->memory=std::make_unique<MemoryFrame>();void* bits=nullptr;
++            next->memory->bitmap=CreateDIBSection(nullptr,reinterpret_cast<BITMAPINFO*>(&bmi),DIB_RGB_COLORS,&bits,nullptr,0);
++            if(!next->memory->bitmap||!bits)return HRESULT_FROM_WIN32(GetLastError());
++            next->memory->pixels=static_cast<unsigned char*>(bits);std::memcpy(bits,pixels.data(),pixels.size());
++        }else{
++            if(!device)return CO_E_NOTINITIALIZED;
++            D3DFORMAT df=bpp==2?D3DFMT_R5G6B5:D3DFMT_X8R8G8B8;
++            // The measured SDK1 texture contract is MANAGED/usage0. Lock the
++            // managed backing store directly; the runtime uploads it as needed.
++            // A caller-owned lease therefore remains valid across D3D9 Reset.
++            HRESULT hr=device->CreateTexture(frame.width,frame.height,1,0,df,D3DPOOL_MANAGED,&next->texture,nullptr);if(FAILED(hr))return hr;
++            D3DLOCKED_RECT locked{};hr=next->texture->LockRect(0,&locked,nullptr,0);if(FAILED(hr))return hr;
++            if(locked.Pitch<pitch||!locked.pBits){next->texture->UnlockRect(0);return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);}
++            for(int y=0;y<frame.height;++y)std::memcpy(static_cast<unsigned char*>(locked.pBits)+static_cast<std::size_t>(y)*locked.Pitch,pixels.data()+static_cast<std::size_t>(y)*pitch,row);
++            hr=next->texture->UnlockRect(0);if(FAILED(hr))return hr;
++        }
++        if(slot.texture)slot.texture->Release();slot.memory=std::move(next->memory);slot.texture=next->texture;next->texture=nullptr;
++        slot.width=next->width;slot.height=next->height;slot.pitch=next->pitch;slot.format=format;slot.alpha=useAlpha;return S_OK;
++    }
++};
++
++LegacyVideo21Adapter::LegacyVideo21Adapter():impl_(new Impl(this)){}
++LegacyVideo21Adapter::~LegacyVideo21Adapter()=default;
++HRESULT LegacyVideo21Adapter::Create(HWND window,LPVOID context,BVL_CONTEXT_TYPE type)try {
++    if(impl_->created.load())return BVERR_ALREADY_CREATED;
++    if(!window||(type!=BVL_CONTEXT_DIRECTX9&&type!=BVL_CONTEXT_MEMORYBUFFER))return E_INVALIDARG;
++    if(type==BVL_CONTEXT_DIRECTX9&&!context)return E_POINTER;
++    ModulePolicy policy;HRESULT hr=ReadDefaultPolicy(policy);if(FAILED(hr))return hr;
++    impl_->context=type;impl_->renderThread=GetCurrentThreadId();
++    if(type==BVL_CONTEXT_DIRECTX9){impl_->device=static_cast<IDirect3DDevice9*>(context);impl_->device->AddRef();}
++    hr=impl_->Start(policy,window);if(FAILED(hr)&&impl_->device){impl_->device->Release();impl_->device=nullptr;}return hr;
++}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Release()try {
++    if(std::this_thread::get_id()==impl_->worker.get_id())return RPC_E_CANTCALLOUT_ININPUTSYNCCALL;
++    if(impl_->context==BVL_CONTEXT_DIRECTX9&&GetCurrentThreadId()!=impl_->renderThread)return RPC_E_WRONG_THREAD;
++    if(impl_->HasBorrows())return HRESULT_FROM_WIN32(ERROR_BUSY);
++    impl_->Shutdown();delete this;return S_OK;
++}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Verify(LPCSTR id,LPCSTR key)try {return impl_->Send([id,key](Decoder21& d){return d.Verify(id,key);});}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++UINT LegacyVideo21Adapter::GetVersion()try{auto value=std::make_shared<UINT>(0);HRESULT hr=impl_->Send([value](Decoder21& d){*value=d.Version();return S_OK;},false,false);return FAILED(hr)?0:*value;}catch(...){return 0;}
++HRESULT LegacyVideo21Adapter::Open(LPCWSTR p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen(p,nullptr,o,f,a,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Open(LPCSTR p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen(Wide(p),nullptr,o,f,a,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++namespace {
++std::shared_ptr<SourceOps> WrapSource(IBandiVideoSource* source){
++    if(!source)return {};auto out=std::make_shared<SourceOps>();
++    out->read=[source](unsigned char* p,int n){return source->Read(p,n);};out->seek=[source](std::int64_t n){return source->SetPosition(n);};out->position=[source]{return source->GetPosition();};out->length=[source]{return source->GetLength();};return out;
++}
++}
++HRESULT LegacyVideo21Adapter::Open(IBandiVideoSource* p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen({},WrapSource(p),o,f,a,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Play(BOOL r)try {return impl_->DoPlay(r,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Seek(double s)try {return impl_->DoSeek(s,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Stop()try {return impl_->DoStop(false,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Close()try {return impl_->DoStop(true,false);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::OpenAsync(LPCWSTR p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen(p,nullptr,o,f,a,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::OpenAsync(LPCSTR p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen(Wide(p),nullptr,o,f,a,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::OpenAsync(IBandiVideoSource* p,BVL_OPEN_OPT o,BVL_PIXEL_FORMAT f,BVL_AUDIO_DEVICE a)try {if(!p)return E_POINTER;return impl_->DoOpen({},WrapSource(p),o,f,a,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::PlayAsync(BOOL r)try {return impl_->DoPlay(r,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::SeekAsync(double s)try {return impl_->DoSeek(s,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::StopAsync()try {return impl_->DoStop(false,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::CloseAsync()try {return impl_->DoStop(true,true);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Pause()try {return impl_->Send([this](Decoder21& d){HRESULT hr=d.Pause(true);if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(impl_->stateMutex);impl_->status=DecoderStatus::paused;}return hr;});}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::Resume()try {return impl_->Send([this](Decoder21& d){HRESULT hr=d.Pause(false);if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(impl_->stateMutex);impl_->status=DecoderStatus::playing;}return hr;});}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::SetVolume(UINT volume)try {if(volume>255)return E_INVALIDARG;return impl_->Send([this,volume](Decoder21& d){HRESULT hr=d.SetVolume(volume);if(SUCCEEDED(hr)){std::lock_guard<std::mutex> lock(impl_->stateMutex);impl_->volume=volume;}return hr;});}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::SetAlpha(UINT alpha)try {if(alpha>255)return E_INVALIDARG;if(!impl_->created.load())return CO_E_NOTINITIALIZED;std::lock_guard<std::mutex> lock(impl_->stateMutex);impl_->alpha=alpha;return S_OK;}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++BOOL LegacyVideo21Adapter::IsPlaying(){if(!impl_->created.load()||impl_->opening.load())return FALSE;std::lock_guard<std::mutex> lock(impl_->stateMutex);return impl_->status==DecoderStatus::playing?TRUE:FALSE;}
++LPVOID LegacyVideo21Adapter::GetLastFrame(){void* p=nullptr;return SUCCEEDED(GetLastFrame(&p))?p:nullptr;}
++HRESULT LegacyVideo21Adapter::GetLastFrame(void** p)try {return impl_->Borrow(p);}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::ReleaseLastFrame(void* p)try {
++    if(impl_->context==BVL_CONTEXT_DIRECTX9&&GetCurrentThreadId()!=impl_->renderThread)return RPC_E_WRONG_THREAD;
++    if(!p)return E_POINTER;std::lock_guard<std::mutex> lock(impl_->frameMutex);
++    for(auto& slot:impl_->frames)if(slot->Key()==p){if(!slot->borrows)return E_INVALIDARG;--slot->borrows;if(slot->texture)slot->texture->Release();return S_OK;}return E_INVALIDARG;
++}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++BOOL LegacyVideo21Adapter::CheckFrame()try{
++    if(!impl_->created.load()||impl_->opening.load())return FALSE;
++    auto yes=std::make_shared<bool>(false);HRESULT hr=impl_->Send([yes](Decoder21& d){*yes=d.IsNextFrame();return S_OK;},false,false);return SUCCEEDED(hr)&&*yes?TRUE:FALSE;
++}catch(...){return FALSE;}
++HRESULT LegacyVideo21Adapter::GetVideoInfo(BVLVideoInfo& out)try {
++    std::memset(&out,0,sizeof(out));if(!impl_->created.load())return CO_E_NOTINITIALIZED;if(impl_->opening.load())return BVERR_NOT_OPENED;
++    {std::lock_guard<std::mutex> lock(impl_->stateMutex);if(FAILED(impl_->lastResult))return impl_->lastResult;}
++    auto clock=std::make_shared<std::int64_t>(0);HRESULT clockResult=impl_->Send([clock](Decoder21& d){return d.SoundClock(*clock);},false,false);
++    std::lock_guard<std::mutex> lock(impl_->stateMutex);
++    out.Format=impl_->requestedFormat;out.Playflag=impl_->option;out.width=impl_->info.width;out.height=impl_->info.height;out.TotalPlayTime=impl_->info.duration100ns/TicksPerSecond;
++    out.ErrorFrames=impl_->decodeErrors;out.CurrentRenderTime=impl_->renderTime/TicksPerSecond;
++    // Silent/no-audio sources can legitimately have no opened sound device.
++    // Their last decoded timestamp remains meaningful without inventing a
++    // sound clock or converting that optional failure into a video failure.
++    out.CurrentPlayTime=(SUCCEEDED(clockResult)?impl_->clockBase+std::max<std::int64_t>(0,*clock-impl_->clockAtBase):impl_->renderTime)/TicksPerSecond;
++    switch(impl_->status){case DecoderStatus::playing:out.Status=BVL_STATUS_PLAYING;break;case DecoderStatus::paused:out.Status=BVL_STATUS_PAUSED;break;case DecoderStatus::closed:out.Status=BVL_STATUS_CREATED;break;default:out.Status=BVL_STATUS_OPENED;break;}return S_OK;
++}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++double LegacyVideo21Adapter::FramesToTime(INT frames){std::lock_guard<std::mutex> lock(impl_->stateMutex);if(impl_->info.fpsRate<=0||impl_->info.fpsScale<=0)return -1;return static_cast<double>(frames)*impl_->info.fpsScale/impl_->info.fpsRate;}
++INT LegacyVideo21Adapter::TimeToFrames(double seconds){std::lock_guard<std::mutex> lock(impl_->stateMutex);if(!std::isfinite(seconds)||impl_->info.fpsRate<=0||impl_->info.fpsScale<=0)return -1;long double n=static_cast<long double>(seconds)*impl_->info.fpsRate/impl_->info.fpsScale;if(n>INT_MAX||n<INT_MIN)return -1;return static_cast<INT>(n);}
++HRESULT LegacyVideo21Adapter::BeforeDeviceReset()try {if(GetCurrentThreadId()!=impl_->renderThread)return RPC_E_WRONG_THREAD;std::lock_guard<std::mutex> lock(impl_->frameMutex);if(impl_->context!=BVL_CONTEXT_DIRECTX9){for(auto& p:impl_->frames)if(p->borrows)return HRESULT_FROM_WIN32(ERROR_BUSY);impl_->frames.clear();}impl_->reset=true;return S_OK;}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++HRESULT LegacyVideo21Adapter::AfterDeviceReset()try {if(GetCurrentThreadId()!=impl_->renderThread)return RPC_E_WRONG_THREAD;std::lock_guard<std::mutex> lock(impl_->frameMutex);impl_->reset=false;return S_OK;}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++bool LegacyVideo21Adapter::ConsumeCurrentEofNotification(WPARAM p,LPARAM tag){if(p!=reinterpret_cast<WPARAM>(this)||static_cast<std::uint64_t>(tag)!=impl_->notification.load())return false;std::lock_guard<std::mutex> lock(impl_->stateMutex);if(!impl_->eofPosted||impl_->eofConsumed||impl_->activeNotification!=static_cast<std::uint64_t>(tag))return false;impl_->eofConsumed=true;return true;}
++bool LegacyVideo21Adapter::ConsumeCurrentOpenedNotification(WPARAM p,LPARAM tag){if(static_cast<std::uint64_t>(tag)!=impl_->notification.load())return false;std::lock_guard<std::mutex> lock(impl_->stateMutex);if(!impl_->openedPosted||impl_->openedConsumed||impl_->activeNotification!=static_cast<std::uint64_t>(tag)||p!=static_cast<WPARAM>(impl_->openedResult))return false;impl_->openedConsumed=true;return true;}
++HRESULT CreateLegacyVideo21(DWORD version,void** out){if(!out)return E_POINTER;*out=nullptr;if(version!=BANDI_VIDEO_LIBRARY_VERSION)return BVERR_INVALID_VERSION;try{*out=static_cast<IBandiVideo*>(new LegacyVideo21Adapter);return S_OK;}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}}
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.h b/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.h
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/LegacyVideo21Adapter.h
+@@ -0,0 +1,69 @@
++#pragma once
++// PRIVATE IMPLEMENTATION CANDIDATE. No Core integration or runtime deployment.
++// Define this macro to the existing SDK1 BandiVideo.h, never the SDK2 header.
++#ifndef OPENDBO_BANDI_V1_HEADER
++#define OPENDBO_BANDI_V1_HEADER "../BandiVideo.h"
++#endif
++#include OPENDBO_BANDI_V1_HEADER
++#include <memory>
++
++namespace opendbo_bandi_adapter {
++class LegacyVideo21Adapter final : public ::IBandiVideo {
++public:
++    LegacyVideo21Adapter();
++    ~LegacyVideo21Adapter();
++    HRESULT Create(HWND window, LPVOID context = NULL,
++        BVL_CONTEXT_TYPE contextType = BVL_CONTEXT_DIRECTX9) override;
++    HRESULT Release() override;
++    HRESULT Verify(LPCSTR id, LPCSTR key) override;
++    UINT GetVersion() override;
++    HRESULT Open(LPCWSTR path, BVL_OPEN_OPT option, BVL_PIXEL_FORMAT format,
++        BVL_AUDIO_DEVICE audio) override;
++    HRESULT Open(LPCSTR path, BVL_OPEN_OPT option, BVL_PIXEL_FORMAT format,
++        BVL_AUDIO_DEVICE audio) override;
++    HRESULT Open(IBandiVideoSource* source, BVL_OPEN_OPT option,
++        BVL_PIXEL_FORMAT format, BVL_AUDIO_DEVICE audio) override;
++    HRESULT Play(BOOL repeat) override;
++    HRESULT Seek(double seconds) override;
++    HRESULT Stop() override;
++    HRESULT Close() override;
++    HRESULT OpenAsync(LPCWSTR path, BVL_OPEN_OPT option,
++        BVL_PIXEL_FORMAT format, BVL_AUDIO_DEVICE audio) override;
++    HRESULT OpenAsync(LPCSTR path, BVL_OPEN_OPT option,
++        BVL_PIXEL_FORMAT format, BVL_AUDIO_DEVICE audio) override;
++    HRESULT OpenAsync(IBandiVideoSource* source, BVL_OPEN_OPT option,
++        BVL_PIXEL_FORMAT format, BVL_AUDIO_DEVICE audio) override;
++    HRESULT PlayAsync(BOOL repeat) override;
++    HRESULT SeekAsync(double seconds) override;
++    HRESULT StopAsync() override;
++    HRESULT CloseAsync() override;
++    HRESULT Pause() override;
++    HRESULT Resume() override;
++    HRESULT SetVolume(UINT volume) override;
++    HRESULT SetAlpha(UINT alpha) override;
++    BOOL IsPlaying() override;
++    LPVOID GetLastFrame() override;
++    HRESULT GetLastFrame(void** renderTarget) override;
++    HRESULT GetVideoInfo(BVLVideoInfo& info) override;
++    HRESULT ReleaseLastFrame(void* renderTarget) override;
++    BOOL CheckFrame() override;
++    double FramesToTime(INT frames) override;
++    INT TimeToFrames(double seconds) override;
++
++    // Proposed bridge-only hooks. Their implementation and consumer call sites
++    // are part of later integration, not features supplied by SDK2 itself.
++    HRESULT BeforeDeviceReset();
++    HRESULT AfterDeviceReset();
++    bool ConsumeCurrentEofNotification(WPARAM instance, LPARAM generation);
++    bool ConsumeCurrentOpenedNotification(WPARAM instance, LPARAM generation);
++private:
++    LegacyVideo21Adapter(const LegacyVideo21Adapter&) = delete;
++    LegacyVideo21Adapter& operator=(const LegacyVideo21Adapter&) = delete;
++    struct Impl;
++    std::unique_ptr<Impl> impl_;
++};
++
++// Internal static C++ facade factory matching only the existing caller type.
++// It is not the SDK2 DLL export and must never cast that export to this type.
++HRESULT CreateLegacyVideo21(DWORD requestedSdk1Version, void** legacyInterface);
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Sdk21Native.h b/DboClient/Lib/NtlMovie/Video21Bridge/Sdk21Native.h
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Sdk21Native.h
+@@ -0,0 +1,10 @@
++#pragma once
++// SDK2-only translation units. Never include this together with SDK1's
++// BandiVideo.h: preprocessor macros are not isolated by a C++ namespace.
++#include <windows.h>
++#include <unknwn.h>
++#include <cassert>
++#include <tchar.h>
++namespace opendbo_bandi_sdk21 {
++#include <bandivid.h>
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2Sound.cpp b/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2Sound.cpp
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2Sound.cpp
+@@ -0,0 +1,368 @@
++// Private sound backend port, informed by the vendor's BandiVideoSound_DS/NULL
++// examples (Copyright 2008-2014 Bandisoft). Do not publish vendor-derived code
++// without determining its redistribution license. No SDK1, game or recorder.
++#ifndef NOMINMAX
++#define NOMINMAX
++#endif
++#define DIRECTSOUND_VERSION 0x0800
++#include "Sdk2SoundFactory.h"
++#include <dsound.h>
++#include <process.h>
++#include <algorithm>
++#include <atomic>
++#include <cmath>
++#include <cstdint>
++#include <cstring>
++#include <memory>
++#include <new>
++#include <vector>
++
++namespace opendbo_bandi_adapter {
++namespace {
++using opendbo_bandi_sdk21::IBandiVideoSoundCB;
++struct Lock {
++    CRITICAL_SECTION* p;
++    explicit Lock(CRITICAL_SECTION& value):p(&value){EnterCriticalSection(p);}
++    ~Lock(){LeaveCriticalSection(p);}
++};
++static HRESULT LastErrorHR(){const DWORD error=GetLastError();return error?HRESULT_FROM_WIN32(error):E_FAIL;}
++static LONG VolumeDB(INT volume){
++    if(volume==0)return DSBVOLUME_MIN;
++    if(volume==255)return DSBVOLUME_MAX;
++    // Preserve the vendor sample's monotonic 0..255 logarithmic gain mapping.
++    const double floor=1e-10;
++    const double gain=3000.0*std::log10((1.0-floor)*(static_cast<double>(volume)/255.0)+floor);
++    return static_cast<LONG>((std::max)(-10000.0,(std::min)(0.0,gain)));
++}
++static INT64 FramesTime(UINT64 frames,UINT rate){
++    if(!rate)return 0;
++    return static_cast<INT64>(frames/rate)*10000000+
++        static_cast<INT64>((frames%rate)*10000000/rate);
++}
++
++class SoundSession:public std::enable_shared_from_this<SoundSession> {
++    CRITICAL_SECTION mutex_{};
++    HANDLE stop_=nullptr,ready_=nullptr,thread_=nullptr;
++    unsigned threadId_=0;
++    HWND owner_=nullptr;
++    bool silent_=true,open_=false,started_=false,paused_=false,bufferPlaying_=false;
++    UINT channels_=0,rate_=0,align_=0;
++    INT volume_=255;
++    UINT64 epoch_=0,drainedFrames_=0,writtenFrames_=0,playedFrames_=0;
++    INT64 qpcFrequency_=0,qpcAnchor_=0,clockBase_=0,lastTime_=0;
++    HRESULT failure_=S_OK;
++    IBandiVideoSoundCB* callback_=nullptr;
++    IDirectSound8* device_=nullptr;
++    IDirectSoundBuffer* buffer_=nullptr;
++    DWORD capacity_=0,lastCursor_=0,writeCursor_=0;
++    std::vector<BYTE> shadow_;
++    INT16 pendingPCM_[2048*8]{};
++    UINT pendingFrames_=0;
++
++    static unsigned __stdcall Entry(void* opaque){
++        std::unique_ptr<std::shared_ptr<SoundSession>> transfer(static_cast<std::shared_ptr<SoundSession>*>(opaque));
++        std::shared_ptr<SoundSession> session=*transfer;transfer.reset();
++        session->Run();return 0;
++    }
++    INT64 QpcTimeLocked()const{
++        if(!started_ || paused_)return clockBase_;
++        LARGE_INTEGER now{};if(!QueryPerformanceCounter(&now) || qpcFrequency_<=0)return clockBase_;
++        const INT64 ticks=(std::max)(INT64(0),now.QuadPart-qpcAnchor_);
++        const long double delta=static_cast<long double>(ticks)*10000000.0L/qpcFrequency_;
++        const long double total=static_cast<long double>(clockBase_)+delta;
++        return total>static_cast<long double>(INT64_MAX)?INT64_MAX:static_cast<INT64>(total);
++    }
++    HRESULT UpdatePositionLocked(){
++        if(!bufferPlaying_)return S_OK;
++        DWORD cursor=0;const HRESULT hr=buffer_->GetCurrentPosition(&cursor,nullptr);
++        if(FAILED(hr))return hr;
++        if(cursor>=capacity_ || cursor%align_)return E_FAIL;
++        const DWORD delta=(cursor+capacity_-lastCursor_)%capacity_;
++        playedFrames_+=delta/align_;lastCursor_=cursor;
++        // Never advance the audio clock beyond samples actually submitted.
++        if(playedFrames_>writtenFrames_)playedFrames_=writtenFrames_;
++        lastTime_=(std::max)(lastTime_,FramesTime(playedFrames_,rate_));
++        if(writtenFrames_ && playedFrames_==writtenFrames_){
++            // A starved/finished decoder must not loop stale PCM from the ring.
++            // Resume future data at its actual next write position, same clock.
++            HRESULT stopped=buffer_->Stop();if(FAILED(stopped))return stopped;
++            bufferPlaying_=false;
++            stopped=buffer_->SetCurrentPosition(writeCursor_);if(FAILED(stopped))return stopped;
++            lastCursor_=writeCursor_;
++        }
++        return S_OK;
++    }
++    HRESULT RestoreLocked(){
++        HRESULT hr=buffer_->Restore();if(FAILED(hr))return hr;
++        void* first=nullptr;void* second=nullptr;DWORD firstBytes=0,secondBytes=0;
++        hr=buffer_->Lock(0,capacity_,&first,&firstBytes,&second,&secondBytes,0);
++        if(FAILED(hr))return hr;
++        const bool valid=firstBytes+secondBytes==capacity_ && (!firstBytes || first) && (!secondBytes || second);
++        if(valid){
++            if(firstBytes)std::memcpy(first,shadow_.data(),firstBytes);
++            if(secondBytes)std::memcpy(second,shadow_.data()+firstBytes,secondBytes);
++        }
++        const HRESULT unlock=buffer_->Unlock(first,firstBytes,second,secondBytes);
++        if(!valid)return E_FAIL;if(FAILED(unlock))return unlock;
++        hr=buffer_->SetCurrentPosition(lastCursor_);if(FAILED(hr))return hr;
++        return bufferPlaying_?buffer_->Play(0,0,DSBPLAY_LOOPING):S_OK;
++    }
++    HRESULT WriteLocked(const INT16* pcm,UINT frames){
++        const DWORD bytes=frames*align_;
++        if(!bytes || bytes>=capacity_)return E_INVALIDARG;
++        void* first=nullptr;void* second=nullptr;DWORD firstBytes=0,secondBytes=0;
++        HRESULT hr=buffer_->Lock(writeCursor_,bytes,&first,&firstBytes,&second,&secondBytes,0);
++        if(hr==DSERR_BUFFERLOST){
++            hr=RestoreLocked();if(FAILED(hr))return hr;
++            hr=buffer_->Lock(writeCursor_,bytes,&first,&firstBytes,&second,&secondBytes,0);
++        }
++        if(FAILED(hr))return hr;
++        const bool valid=firstBytes+secondBytes==bytes && (!firstBytes || first) && (!secondBytes || second);
++        if(valid){
++            if(firstBytes)std::memcpy(first,pcm,firstBytes);
++            if(secondBytes)std::memcpy(second,reinterpret_cast<const BYTE*>(pcm)+firstBytes,secondBytes);
++        }
++        const HRESULT unlock=buffer_->Unlock(first,firstBytes,second,secondBytes);
++        if(!valid)return E_FAIL;if(FAILED(unlock))return unlock;
++        const DWORD tail=(std::min)(bytes,capacity_-writeCursor_);
++        std::memcpy(shadow_.data()+writeCursor_,pcm,tail);
++        if(bytes>tail)std::memcpy(shadow_.data(),reinterpret_cast<const BYTE*>(pcm)+tail,bytes-tail);
++        writeCursor_=(writeCursor_+bytes)%capacity_;writtenFrames_+=frames;
++        if(!bufferPlaying_){
++            hr=buffer_->Play(0,0,DSBPLAY_LOOPING);if(FAILED(hr))return hr;bufferPlaying_=true;
++        }
++        return S_OK;
++    }
++    HRESULT ResetBufferLocked(){
++        if(!buffer_)return S_OK;
++        HRESULT hr=buffer_->Stop();if(FAILED(hr))return hr;
++        bufferPlaying_=false;lastCursor_=writeCursor_=0;
++        hr=buffer_->SetCurrentPosition(0);if(FAILED(hr))return hr;
++        std::fill(shadow_.begin(),shadow_.end(),BYTE(0));
++        void* first=nullptr;void* second=nullptr;DWORD firstBytes=0,secondBytes=0;
++        hr=buffer_->Lock(0,capacity_,&first,&firstBytes,&second,&secondBytes,0);
++        if(hr==DSERR_BUFFERLOST)return RestoreLocked();
++        if(FAILED(hr))return hr;
++        const bool valid=firstBytes+secondBytes==capacity_ && (!firstBytes || first) && (!secondBytes || second);
++        if(valid){if(firstBytes)std::memset(first,0,firstBytes);if(secondBytes)std::memset(second,0,secondBytes);}
++        const HRESULT unlock=buffer_->Unlock(first,firstBytes,second,secondBytes);
++        return valid?unlock:E_FAIL;
++    }
++    void FailLocked(HRESULT hr){
++        if(SUCCEEDED(hr))hr=E_FAIL;failure_=hr;started_=false;paused_=false;++epoch_;
++        if(buffer_){buffer_->Stop();bufferPlaying_=false;}
++    }
++    void Pump(){
++        // Callback is never called under a session/lifecycle lock. It may Close,
++        // Stop, Pause or Release the adapter; this session has independent life.
++        for(unsigned batch=0;batch<8;++batch){
++            IBandiVideoSoundCB* callback=nullptr;UINT request=0;UINT64 epoch=0;
++            {
++                Lock guard(mutex_);
++                if(!open_ || !started_ || paused_ || FAILED(failure_))return;
++                if(pendingFrames_){
++                    const UINT frames=pendingFrames_;pendingFrames_=0;
++                    const HRESULT hr=WriteLocked(pendingPCM_,frames);
++                    if(FAILED(hr)){FailLocked(hr);return;}
++                    continue;
++                }
++                if(silent_){
++                    const INT64 now=QpcTimeLocked();
++                    const UINT64 target=static_cast<UINT64>(now/10000000)*rate_+
++                        static_cast<UINT64>(now%10000000)*rate_/10000000;
++                    if(target<=drainedFrames_)return;
++                    request=static_cast<UINT>((std::min)(UINT64(2048),target-drainedFrames_));
++                }else{
++                    const HRESULT hr=UpdatePositionLocked();if(FAILED(hr)){FailLocked(hr);return;}
++                    const UINT64 queued=writtenFrames_-playedFrames_;
++                    const UINT64 capacityFrames=capacity_/align_;
++                    if(queued>=capacityFrames-1)return;
++                    request=static_cast<UINT>((std::min)(UINT64(2048),capacityFrames-1-queued));
++                }
++                epoch=epoch_;callback=callback_;if(callback)callback->AddRef();
++            }
++            if(!callback)return;
++            INT16 pcm[2048*8]{};INT received=-1;
++            try{received=callback->GetPcmData(pcm,static_cast<INT>(request));}catch(...){received=-1;}
++            callback->Release();
++            {
++                Lock guard(mutex_);
++                if(!open_ || !started_ || epoch_!=epoch)return;
++                if(received<0 || static_cast<UINT>(received)>request){FailLocked(E_FAIL);return;}
++                if(!received)return;
++                if(silent_)drainedFrames_+=static_cast<UINT>(received);
++                else if(paused_){
++                    // Pause does not change decoder stream identity: retain the
++                    // already-consumed PCM, then submit it before the next pull.
++                    pendingFrames_=static_cast<UINT>(received);
++                    std::memcpy(pendingPCM_,pcm,pendingFrames_*align_);return;
++                }else{const HRESULT hr=WriteLocked(pcm,static_cast<UINT>(received));if(FAILED(hr)){FailLocked(hr);return;}}
++            }
++        }
++    }
++    void Run(){
++        const HANDLE starts[]={stop_,ready_};
++        if(WaitForMultipleObjects(2,starts,FALSE,INFINITE)!=WAIT_OBJECT_0+1)return;
++        while(WaitForSingleObject(stop_,2)==WAIT_TIMEOUT){
++            try{Pump();}catch(...){Lock guard(mutex_);FailLocked(E_FAIL);}
++        }
++    }
++public:
++    SoundSession(HWND owner,bool silent,INT volume):owner_(owner),silent_(silent),volume_(volume){InitializeCriticalSection(&mutex_);}
++    ~SoundSession(){
++        RequestClose();
++        if(thread_ && GetCurrentThreadId()!=threadId_)WaitForSingleObject(thread_,INFINITE);
++        if(buffer_)buffer_->Release();if(device_)device_->Release();
++        if(callback_)callback_->Release();
++        if(thread_)CloseHandle(thread_);if(ready_)CloseHandle(ready_);if(stop_)CloseHandle(stop_);
++        DeleteCriticalSection(&mutex_);
++    }
++    HRESULT Initialize(INT channels,INT samplerate,IBandiVideoSoundCB* callback){
++        if(channels<1 || channels>8 || samplerate<1 || samplerate>384000 || !callback)return E_INVALIDARG;
++        channels_=static_cast<UINT>(channels);rate_=static_cast<UINT>(samplerate);align_=channels_*sizeof(INT16);
++        LARGE_INTEGER frequency{};
++        if(!QueryPerformanceFrequency(&frequency) || frequency.QuadPart<=0)return E_FAIL;qpcFrequency_=frequency.QuadPart;
++        stop_=CreateEventW(nullptr,TRUE,FALSE,nullptr);ready_=CreateEventW(nullptr,TRUE,FALSE,nullptr);
++        if(!stop_ || !ready_)return LastErrorHR();
++        callback->AddRef();callback_=callback;
++        if(!silent_){
++            if(!owner_ || !IsWindow(owner_))return E_INVALIDARG;
++            HRESULT hr=DirectSoundCreate8(nullptr,&device_,nullptr);if(FAILED(hr))return hr;
++            hr=device_->SetCooperativeLevel(owner_,DSSCL_NORMAL);if(FAILED(hr))return hr;
++            WAVEFORMATEX format{};format.wFormatTag=WAVE_FORMAT_PCM;format.nChannels=static_cast<WORD>(channels_);
++            format.nSamplesPerSec=rate_;format.wBitsPerSample=16;format.nBlockAlign=static_cast<WORD>(align_);format.nAvgBytesPerSec=rate_*align_;
++            capacity_=(std::max)(UINT(8),rate_/5)*align_;shadow_.resize(capacity_,0);
++            DSBUFFERDESC descriptor{};descriptor.dwSize=sizeof(descriptor);
++            descriptor.dwFlags=DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_GLOBALFOCUS|DSBCAPS_CTRLVOLUME;
++            descriptor.dwBufferBytes=capacity_;descriptor.lpwfxFormat=&format;
++            hr=device_->CreateSoundBuffer(&descriptor,&buffer_,nullptr);if(FAILED(hr))return hr;
++            hr=ResetBufferLocked();if(FAILED(hr))return hr;
++            hr=buffer_->SetVolume(VolumeDB(volume_));if(FAILED(hr))return hr;
++        }
++        open_=true;
++        auto* transfer=new(std::nothrow)std::shared_ptr<SoundSession>(shared_from_this());if(!transfer)return E_OUTOFMEMORY;
++        thread_=reinterpret_cast<HANDLE>(_beginthreadex(nullptr,0,&Entry,transfer,0,&threadId_));
++        if(!thread_){delete transfer;return E_OUTOFMEMORY;}
++        return S_OK;
++    }
++    void Publish(){SetEvent(ready_);}
++    void RequestClose(){
++        Lock guard(mutex_);open_=false;started_=false;paused_=false;pendingFrames_=0;++epoch_;
++        if(buffer_){buffer_->Stop();bufferPlaying_=false;}
++        if(stop_)SetEvent(stop_);
++    }
++    void Join(){if(thread_ && GetCurrentThreadId()!=threadId_)WaitForSingleObject(thread_,INFINITE);}
++    HRESULT Start(){
++        Lock guard(mutex_);if(!open_)return E_UNEXPECTED;
++        ++epoch_;failure_=S_OK;pendingFrames_=0;clockBase_=lastTime_=0;drainedFrames_=writtenFrames_=playedFrames_=0;
++        LARGE_INTEGER now{};if(!QueryPerformanceCounter(&now))return E_FAIL;qpcAnchor_=now.QuadPart;
++        const HRESULT hr=ResetBufferLocked();if(FAILED(hr)){FailLocked(hr);return hr;}
++        started_=true;paused_=false;return S_OK;
++    }
++    HRESULT Stop(){
++        Lock guard(mutex_);if(!open_)return E_UNEXPECTED;
++        ++epoch_;started_=false;paused_=false;pendingFrames_=0;clockBase_=lastTime_=0;drainedFrames_=writtenFrames_=playedFrames_=0;
++        const HRESULT hr=ResetBufferLocked();if(FAILED(hr))failure_=hr;return hr;
++    }
++    HRESULT Pause(BOOL paused){
++        Lock guard(mutex_);if(!open_ || !started_)return E_UNEXPECTED;
++        if((paused!=FALSE)==paused_)return S_OK;
++        // Pause/resume preserves the stream; Stop/Start/Close alone change epoch.
++        if(paused){
++            if(silent_)clockBase_=QpcTimeLocked();
++            else{const HRESULT hr=UpdatePositionLocked();if(FAILED(hr)){FailLocked(hr);return hr;}if(buffer_){const HRESULT stop=buffer_->Stop();if(FAILED(stop))return stop;}}
++            paused_=true;
++        }else{
++            LARGE_INTEGER now{};if(!QueryPerformanceCounter(&now))return E_FAIL;qpcAnchor_=now.QuadPart;
++            paused_=false;
++            if(bufferPlaying_){const HRESULT hr=buffer_->Play(0,0,DSBPLAY_LOOPING);if(FAILED(hr)){FailLocked(hr);return hr;}}
++        }
++        return S_OK;
++    }
++    HRESULT GetTime(INT64& time){
++        Lock guard(mutex_);time=0;if(!open_)return E_UNEXPECTED;
++        if(silent_)time=QpcTimeLocked();
++        else{
++            if(!paused_){const HRESULT hr=UpdatePositionLocked();if(FAILED(hr)){FailLocked(hr);return hr;}}
++            time=lastTime_;
++        }
++        return failure_;
++    }
++    HRESULT SetVolume(INT volume){
++        Lock guard(mutex_);if(volume<0 || volume>255)return E_INVALIDARG;
++        volume_=volume;return buffer_?buffer_->SetVolume(VolumeDB(volume)):S_OK;
++    }
++};
++
++class AdapterSound final:public IAdapterSound {
++    std::atomic<ULONG> references_{1};
++    std::atomic<bool> opening_{false};
++    UINT64 generation_=0;
++    CRITICAL_SECTION lifecycle_{};
++    HWND owner_;
++    bool silent_=false;
++    INT volume_=255;
++    std::shared_ptr<SoundSession> session_;
++    std::shared_ptr<SoundSession> Current(){Lock guard(lifecycle_);return session_;}
++public:
++    explicit AdapterSound(HWND owner):owner_(owner){InitializeCriticalSection(&lifecycle_);}
++    ~AdapterSound(){Close();DeleteCriticalSection(&lifecycle_);}
++    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid,void** out)override{
++        if(!out)return E_POINTER;*out=nullptr;if(iid!=IID_IUnknown)return E_NOINTERFACE;
++        *out=static_cast<IAdapterSound*>(this);AddRef();return S_OK;
++    }
++    ULONG STDMETHODCALLTYPE AddRef()override{return ++references_;}
++    ULONG STDMETHODCALLTYPE Release()override{const ULONG remaining=--references_;if(!remaining)delete this;return remaining;}
++    HRESULT SetSilentMode(BOOL silent)override{Lock guard(lifecycle_);if(session_ || opening_.load())return E_UNEXPECTED;silent_=silent!=FALSE;return S_OK;}
++    HRESULT Open(INT channels,INT samplerate,IBandiVideoSoundCB* callback)override{
++        // The admission flag precedes Close and remains set across the unlocked
++        // Join. A concurrent/reentrant Open cannot replace an unpublished owner.
++        if(opening_.exchange(true))return HRESULT_FROM_WIN32(ERROR_BUSY);
++        struct Admission {std::atomic<bool>& flag;~Admission(){flag.store(false);}} admission{opening_};
++        try{
++            std::shared_ptr<SoundSession> old,candidate;UINT64 ticket=0;
++            {
++                Lock guard(lifecycle_);ticket=++generation_;
++                old.swap(session_);if(old)old->RequestClose();
++            }
++            if(old)old->Join(); // Never hold a lifecycle lock while joining.
++            HRESULT result=E_FAIL;
++            {
++                Lock guard(lifecycle_);
++                if(generation_!=ticket)return HRESULT_FROM_WIN32(ERROR_CANCELLED);
++                candidate=std::make_shared<SoundSession>(owner_,silent_,volume_);
++                result=candidate->Initialize(channels,samplerate,callback);
++                if(SUCCEEDED(result) && generation_==ticket){
++                    session_=candidate;candidate->Publish();return S_OK;
++                }
++                // An AddRef observer may Close reentrantly during Initialize.
++                if(SUCCEEDED(result))result=HRESULT_FROM_WIN32(ERROR_CANCELLED);
++                candidate->RequestClose();
++            }
++            candidate->Join();return result;
++        }catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_FAIL;}
++    }
++    void Close()override{
++        std::shared_ptr<SoundSession> old;
++        {Lock guard(lifecycle_);++generation_;old.swap(session_);if(old)old->RequestClose();}
++        if(old)old->Join();
++        // Own-callback Close cannot self-join: old session owns all worker state
++        // until the callback returns. DirectSound was already stopped above.
++    }
++    HRESULT Start()override{auto s=Current();return s?s->Start():E_UNEXPECTED;}
++    HRESULT Stop()override{auto s=Current();return s?s->Stop():E_UNEXPECTED;}
++    HRESULT Pause(BOOL pause)override{auto s=Current();return s?s->Pause(pause):E_UNEXPECTED;}
++    HRESULT GetTime(INT64& value)override{auto s=Current();if(!s){value=0;return E_UNEXPECTED;}return s->GetTime(value);}
++    HRESULT SetVolume(INT volume)override{
++        if(volume<0 || volume>255)return E_INVALIDARG;
++        std::shared_ptr<SoundSession> s;
++        {Lock guard(lifecycle_);volume_=volume;s=session_;}
++        return s?s->SetVolume(volume):S_OK;
++    }
++};
++}
++HRESULT CreateAdapterSound(HWND owner,IAdapterSound** out){
++    if(!out)return E_POINTER;*out=nullptr;
++    try{*out=new AdapterSound(owner);return S_OK;}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_FAIL;}
++}
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2SoundFactory.h b/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2SoundFactory.h
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Sound/Sdk2SoundFactory.h
+@@ -0,0 +1,12 @@
++#pragma once
++// Private migration candidate. SDK2-only interface, never include SDK1 here.
++#include "../Sdk21Native.h"
++
++namespace opendbo_bandi_adapter {
++struct IAdapterSound : opendbo_bandi_sdk21::IBandiVideoSound {
++    // Change only between Close and Open; retains the same SDK2/Verify instance.
++    virtual HRESULT SetSilentMode(BOOL silent)=0;
++};
++// Returns one caller-owned reference; does not open a device or start a thread.
++HRESULT CreateAdapterSound(HWND owner,IAdapterSound** out);
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.cpp b/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.cpp
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.cpp
+@@ -0,0 +1,41 @@
++#define NOMINMAX
++#include "Video21Integration.h"
++#include "Backend21.h"
++#include <d3d9.h>
++#include <tchar.h>
++#include <cassert>
++#define OPENDBO_BANDI_V1_HEADER "../BandiVideo.h"
++#include "LegacyVideo21Adapter.h"
++#include <algorithm>
++#include <new>
++#include <string>
++#include <vector>
++
++namespace opendbo_bandi_adapter {
++HRESULT ConfigureInstalledVideo21Policy()try{
++    std::vector<wchar_t> path(512);
++    for(;;){
++        SetLastError(ERROR_SUCCESS);
++        DWORD size=GetModuleFileNameW(nullptr,path.data(),static_cast<DWORD>(path.size()));
++        DWORD error=GetLastError();
++        if(!size)return HRESULT_FROM_WIN32(error?error:ERROR_GEN_FAILURE);
++        if(size<path.size()&&error!=ERROR_INSUFFICIENT_BUFFER){
++            std::wstring value(path.data(),size);auto slash=value.find_last_of(L"\\/");
++            if(slash==std::wstring::npos)return HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
++            ModulePolicy policy;policy.absoluteDll=value.substr(0,slash+1)+L"bdvid64.dll";
++            const unsigned char digest[32]={0x83,0x47,0xe8,0x60,0x8c,0x25,0x19,0x80,0x2f,0x64,0x18,0x3e,0xbd,0x06,0x5f,0xb5,0xf4,0xcb,0x8d,0x24,0x46,0x4a,0x3f,0x39,0xc8,0xab,0x51,0x66,0xd0,0x0c,0xe5,0x18};
++            std::copy(digest,digest+32,policy.sha256.begin());
++            return ConfigureDefaultPolicy(policy);
++        }
++        if(path.size()>=32768)return HRESULT_FROM_WIN32(ERROR_FILENAME_EXCED_RANGE);
++        path.resize((std::min)(path.size()*2,std::size_t(32768)));
++    }
++}catch(const std::bad_alloc&){return E_OUTOFMEMORY;}catch(...){return E_UNEXPECTED;}
++// Only the typed x64 factory above is admitted by the two migrated consumers.
++// A foreign SDK1 object must not be passed to these bridge-only hooks.
++bool IsCurrentVideo21Eof(IBandiVideo* video,WPARAM instance,LPARAM generation){
++    return video&&static_cast<LegacyVideo21Adapter*>(video)->ConsumeCurrentEofNotification(instance,generation);
++}
++HRESULT BeforeVideo21DeviceReset(IBandiVideo* video){return video?static_cast<LegacyVideo21Adapter*>(video)->BeforeDeviceReset():E_POINTER;}
++HRESULT AfterVideo21DeviceReset(IBandiVideo* video){return video?static_cast<LegacyVideo21Adapter*>(video)->AfterDeviceReset():E_POINTER;}
++}
+diff --git a/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.h b/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.h
+new file mode 100644
+--- /dev/null
++++ b/DboClient/Lib/NtlMovie/Video21Bridge/Video21Integration.h
+@@ -0,0 +1,28 @@
++#pragma once
++#include <windows.h>
++struct IBandiVideo;
++namespace opendbo_bandi_adapter {
++HRESULT ConfigureInstalledVideo21Policy();
++HRESULT CreateLegacyVideo21(DWORD requestedVersion,void** output);
++bool IsCurrentVideo21Eof(IBandiVideo*,WPARAM,LPARAM);
++HRESULT BeforeVideo21DeviceReset(IBandiVideo*);
++HRESULT AfterVideo21DeviceReset(IBandiVideo*);
++
++// These helpers own the exact reference/lease they receive, not the video or
++// device. They do not require either SDK header in this declaration boundary.
++template<class Video> class Video21FrameLease final {
++    Video* video_;void* frame_;
++public:
++    Video21FrameLease(Video* video,void* frame):video_(video),frame_(frame){}
++    ~Video21FrameLease(){if(video_&&frame_)video_->ReleaseLastFrame(frame_);}
++    Video21FrameLease(const Video21FrameLease&)=delete;
++    Video21FrameLease& operator=(const Video21FrameLease&)=delete;
++};
++template<class T> struct Video21ComReference final {
++    T* pointer=nullptr;
++    ~Video21ComReference(){if(pointer)pointer->Release();}
++    Video21ComReference()=default;
++    Video21ComReference(const Video21ComReference&)=delete;
++    Video21ComReference& operator=(const Video21ComReference&)=delete;
++};
++}
+diff --git a/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.cpp b/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.cpp
+--- a/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.cpp
++++ b/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.cpp
+@@ -31 +31 @@
+-	RwUInt32 uiId = reinterpret_cast<RwUInt32>(pEntity);
++	uintptr_t uiId = reinterpret_cast<uintptr_t>(pEntity);
+@@ -40 +40 @@
+-	RwUInt32 uiId = reinterpret_cast<RwUInt32>(pEntity);
++	uintptr_t uiId = reinterpret_cast<uintptr_t>(pEntity);
+@@ -52 +52 @@
+-	RwUInt32 uiId = reinterpret_cast<RwUInt32>(pEntity);
++	uintptr_t uiId = reinterpret_cast<uintptr_t>(pEntity);
+diff --git a/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.h b/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.h
+--- a/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.h
++++ b/DboClient/Lib/NtlPresentation/NtlPLRenderGroup.h
+@@ -18,0 +19 @@
++#include <stdint.h>
+@@ -34 +35 @@
+-	typedef std::map<RwUInt32, CNtlPLEntity*> MapEntity;
++	typedef std::map<uintptr_t, CNtlPLEntity*> MapEntity;
+diff --git a/DboClient/Lib/NtlPresentation/NtlPLResourcePack.cpp b/DboClient/Lib/NtlPresentation/NtlPLResourcePack.cpp
+--- a/DboClient/Lib/NtlPresentation/NtlPLResourcePack.cpp
++++ b/DboClient/Lib/NtlPresentation/NtlPLResourcePack.cpp
+@@ -701 +701 @@
+-			m_pCallMakePackNotify->Call((unsigned int)pFileName, uiPercent);
++			m_pCallMakePackNotify->Call(reinterpret_cast<uintptr_t>(pFileName), uiPercent);
+@@ -712 +712 @@
+-        m_pCallMakePackNotify->Call((unsigned int)"Load Pack Header...", 0);
++        m_pCallMakePackNotify->Call(reinterpret_cast<uintptr_t>("Load Pack Header..."), 0);
+diff --git a/DboClient/Lib/Ntl_Plugin_World/src/pipe/p2/p2define.c b/DboClient/Lib/Ntl_Plugin_World/src/pipe/p2/p2define.c
+--- a/DboClient/Lib/Ntl_Plugin_World/src/pipe/p2/p2define.c
++++ b/DboClient/Lib/Ntl_Plugin_World/src/pipe/p2/p2define.c
+@@ -22,0 +23 @@
++#include <stdint.h>
+@@ -84 +85 @@
+-     ((_ptr) = (_type *)(((RwUInt8 *)_ptr) + (_numbytes))) )
++     ((_ptr) = (_type *)((uintptr_t)(_ptr) + (_numbytes))) )
+@@ -186 +187 @@
+-    RxClusterDefinition *lastAddress, *newAddress;
++    uintptr_t            lastAddress, newAddress;
+@@ -202 +203 @@
+-    newAddress = (RxClusterDefinition *)NULL;
++    newAddress = 0;
+@@ -206 +207 @@
+-        newAddress  = (RxClusterDefinition *)0xFFFFFFFF;
++        newAddress  = UINTPTR_MAX;
+@@ -213,2 +214,2 @@
+-                RxClusterDefinition *address;
+-                address = nodeDef->io.clustersOfInterest[j].clusterDef;
++                uintptr_t address;
++                address = (uintptr_t)nodeDef->io.clustersOfInterest[j].clusterDef;
+@@ -225 +226 @@
+-        if (newAddress == (RxClusterDefinition *)0xFFFFFFFF) break;
++        if (newAddress == UINTPTR_MAX) break;
+@@ -255,3 +256,3 @@
+-        RwInt32 diff;
+-
+-        diff = ((RwUInt8 *)newBlock) - ((RwUInt8 *)oldBlock);
++        uintptr_t diff;
++
++        diff = (uintptr_t)newBlock - (uintptr_t)oldBlock;
+diff --git a/DboClient/Lib/Ntl_Plugin_World/src/plcore/bamemory.c b/DboClient/Lib/Ntl_Plugin_World/src/plcore/bamemory.c
+--- a/DboClient/Lib/Ntl_Plugin_World/src/plcore/bamemory.c
++++ b/DboClient/Lib/Ntl_Plugin_World/src/plcore/bamemory.c
+@@ -797 +797 @@
+-                          (uintptr_t)~(freeList->alignment - 1));
++                          ~((uintptr_t)(freeList->alignment - 1)));
+diff --git a/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.c b/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.c
+--- a/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.c
++++ b/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.c
+@@ -2810 +2810 @@
+-                                   ((RwUInt32)shaderConstantPtr - (RwUInt32)basePtr) / sizeof(RwV4d) );
++                                   (RwUInt32)(shaderConstantPtr - basePtr) );
+diff --git a/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.h b/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.h
+--- a/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.h
++++ b/DboClient/Lib/Ntl_Plugin_World/world/pipe/p2/d3d9/d3d9vertexshader.h
+@@ -17 +17 @@
+-#include <d3d9pipe.h>
++#include "d3d9pipe.h"
+diff --git a/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9.c b/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9.c
+--- a/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9.c
++++ b/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9.c
+@@ -586 +586 @@
+-    shaderConstantCount = ((RwUInt32)shaderConstantPtr - (RwUInt32)_rpD3D9SkinVertexShaderConstants) / sizeof(RwV4d);
++    shaderConstantCount = (RwUInt32)(shaderConstantPtr - _rpD3D9SkinVertexShaderConstants);
+diff --git a/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9instance.c b/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9instance.c
+--- a/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9instance.c
++++ b/DboClient/Renderware/Include/rpskin2/d3d9/skind3d9instance.c
+@@ -38,0 +39,2 @@
++void __SetBits(DWORD_PTR* dw, int lowBit, int bits, int newValue);
++
+@@ -69 +71 @@
+-void __SetBits(unsigned long* dw, int lowBit, int bits, int newValue)
++void __SetBits(DWORD_PTR* dw, int lowBit, int bits, int newValue)
+@@ -71 +73 @@
+-	int mask;
++	DWORD_PTR mask;
+@@ -75,3 +77,3 @@
+-	mask = (1 << bits) - 1; // e.g. 1 becomes 0001, 2 becomes 0011, 3 becomes 0111
+-
+-	*dw = (*dw & ~(mask << lowBit)) | (newValue << lowBit);
++	mask = (((DWORD_PTR)1) << bits) - 1; // e.g. 1 becomes 0001, 2 becomes 0011, 3 becomes 0111
++
++	*dw = (*dw & ~(mask << lowBit)) | (((DWORD_PTR)newValue) << lowBit);
+@@ -117,4 +119,4 @@
+-	case 0: cxt.Dr0 = (DWORD) address; break;
+-	case 1: cxt.Dr1 = (DWORD) address; break;
+-	case 2: cxt.Dr2 = (DWORD) address; break;
+-	case 3: cxt.Dr3 = (DWORD) address; break;
++	case 0: cxt.Dr0 = (DWORD_PTR) address; break;
++	case 1: cxt.Dr1 = (DWORD_PTR) address; break;
++	case 2: cxt.Dr2 = (DWORD_PTR) address; break;
++	case 3: cxt.Dr3 = (DWORD_PTR) address; break;
+diff --git a/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9.c b/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9.c
+--- a/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9.c
++++ b/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9.c
+@@ -586 +586 @@
+-    shaderConstantCount = ((RwUInt32)shaderConstantPtr - (RwUInt32)_rpD3D9SkinVertexShaderConstants) / sizeof(RwV4d);
++    shaderConstantCount = (RwUInt32)(shaderConstantPtr - _rpD3D9SkinVertexShaderConstants);
+diff --git a/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9instance.c b/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9instance.c
+--- a/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9instance.c
++++ b/DboClient/Renderware/Include/rpskintoon/d3d9/skind3d9instance.c
+@@ -38,0 +39,2 @@
++void __SetBits(DWORD_PTR* dw, int lowBit, int bits, int newValue);
++
+@@ -69 +71 @@
+-void __SetBits(unsigned long* dw, int lowBit, int bits, int newValue)
++void __SetBits(DWORD_PTR* dw, int lowBit, int bits, int newValue)
+@@ -71 +73 @@
+-	int mask;
++	DWORD_PTR mask;
+@@ -75,3 +77,3 @@
+-	mask = (1 << bits) - 1; // e.g. 1 becomes 0001, 2 becomes 0011, 3 becomes 0111
+-
+-	*dw = (*dw & ~(mask << lowBit)) | (newValue << lowBit);
++	mask = (((DWORD_PTR)1) << bits) - 1; // e.g. 1 becomes 0001, 2 becomes 0011, 3 becomes 0111
++
++	*dw = (*dw & ~(mask << lowBit)) | (((DWORD_PTR)newValue) << lowBit);
+@@ -117,4 +119,4 @@
+-	case 0: cxt.Dr0 = (DWORD) address; break;
+-	case 1: cxt.Dr1 = (DWORD) address; break;
+-	case 2: cxt.Dr2 = (DWORD) address; break;
+-	case 3: cxt.Dr3 = (DWORD) address; break;
++	case 0: cxt.Dr0 = (DWORD_PTR) address; break;
++	case 1: cxt.Dr1 = (DWORD_PTR) address; break;
++	case 2: cxt.Dr2 = (DWORD_PTR) address; break;
++	case 3: cxt.Dr3 = (DWORD_PTR) address; break;
+diff --git a/DboClient/Renderware/Include/rtwing/rtwing.c b/DboClient/Renderware/Include/rtwing/rtwing.c
+--- a/DboClient/Renderware/Include/rtwing/rtwing.c
++++ b/DboClient/Renderware/Include/rtwing/rtwing.c
+@@ -20,0 +21 @@
++#include <stdint.h>
+@@ -1233 +1234 @@
+-    RwInt32 gcondBaseOld, gcondBaseNew, gcondBaseShift;
++    uintptr_t gcondBaseOld, gcondBaseNew, gcondBaseShift;
+@@ -1238 +1239 @@
+-    gcondBaseOld = (RwInt32)wings->wingEdges;
++    gcondBaseOld = (uintptr_t)wings->wingEdges;
+@@ -1243 +1244 @@
+-    gcondBaseNew = (RwInt32)wings->wingEdges;
++    gcondBaseNew = (uintptr_t)wings->wingEdges;
+@@ -1252 +1253 @@
+-                    (RtWingEdge*)((RwInt32)(wings->wingEdges[i].next) +
++                    (RtWingEdge*)((uintptr_t)(wings->wingEdges[i].next) +
+@@ -1258 +1259 @@
+-                    (RtWingEdge*)((RwInt32)(wings->wingEdges[i].prev) +
++                    (RtWingEdge*)((uintptr_t)(wings->wingEdges[i].prev) +
+@@ -1264 +1265 @@
+-                    (RtWingEdge*)((RwInt32)(wings->wingEdges[i].neighbor) +
++                    (RtWingEdge*)((uintptr_t)(wings->wingEdges[i].neighbor) +
+@@ -1273 +1274 @@
+-                    (RtWingEdge*)((RwInt32)(wings->wingVertices[i].edge) +
++                    (RtWingEdge*)((uintptr_t)(wings->wingVertices[i].edge) +
+@@ -1282 +1283 @@
+-                    (RtWingEdge*)((RwInt32)(wings->wingFaces[i].edge) +
++                    (RtWingEdge*)((uintptr_t)(wings->wingFaces[i].edge) +
+@@ -1323 +1324 @@
+-    RwInt32 gcondBaseOld, gcondBaseNew, gcondBaseShift;
++    uintptr_t gcondBaseOld, gcondBaseNew, gcondBaseShift;
+@@ -1329 +1330 @@
+-    gcondBaseOld = (RwInt32)wings->wingVertices;
++    gcondBaseOld = (uintptr_t)wings->wingVertices;
+@@ -1340 +1341 @@
+-    gcondBaseNew = (RwInt32)wings->wingVertices;
++    gcondBaseNew = (uintptr_t)wings->wingVertices;
+@@ -1347 +1348 @@
+-                (RtWingVertex*)((RwInt32)(wings->wingEdges[i].vertex) +
++                (RtWingVertex*)((uintptr_t)(wings->wingEdges[i].vertex) +
+@@ -1360 +1361 @@
+-    gcondBaseOld = (RwInt32)geometryList->vertices;
++    gcondBaseOld = (uintptr_t)geometryList->vertices;
+@@ -1370 +1371 @@
+-    gcondBaseNew = (RwInt32)geometryList->vertices;
++    gcondBaseNew = (uintptr_t)geometryList->vertices;
+@@ -1404,2 +1405,2 @@
+-    RwInt32 gcondBaseOld, gcondBaseNew, gcondBaseShift;
+-    RwInt32 wingBaseOld, wingBaseNew, wingBaseShift;
++    uintptr_t gcondBaseOld, gcondBaseNew, gcondBaseShift;
++    uintptr_t wingBaseOld, wingBaseNew, wingBaseShift;
+@@ -1412 +1413 @@
+-    wingBaseOld = (RwInt32)wings->wingFaces;
++    wingBaseOld = (uintptr_t)wings->wingFaces;
+@@ -1417 +1418 @@
+-    wingBaseNew = (RwInt32)wings->wingFaces;
++    wingBaseNew = (uintptr_t)wings->wingFaces;
+@@ -1426 +1427 @@
+-                    (RtWingFace*)((RwInt32)(wings->wingEdges[i].face) +
++                    (RtWingFace*)((uintptr_t)(wings->wingEdges[i].face) +
+@@ -1442 +1443 @@
+-    gcondBaseOld = (RwInt32)geometryList->polygons;
++    gcondBaseOld = (uintptr_t)geometryList->polygons;
+@@ -1447 +1448 @@
+-    gcondBaseNew = (RwInt32)geometryList->polygons;
++    gcondBaseNew = (uintptr_t)geometryList->polygons;
+@@ -1603,4 +1604,4 @@
+-            RwInt32 orig = (RwInt32)(wings->wingFaces);
+-            RwInt32 shift = (RwInt32)(RtWingReallocateWingFaces(wings, geometryList, chunk)) - orig;
+-
+-            face = (RtWingFace*)((RwInt32)(face) + shift);
++            uintptr_t orig = (uintptr_t)(wings->wingFaces);
++            uintptr_t shift = (uintptr_t)(RtWingReallocateWingFaces(wings, geometryList, chunk)) - orig;
++
++            face = (RtWingFace*)((uintptr_t)(face) + shift);
